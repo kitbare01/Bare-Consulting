@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Services | Chris Bare Consulting</title>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #3498db;
+            --accent: #e74c3c;
+            --light: #ecf0f1;
+            --dark: #2c3e50;
+            --text: #333333;
+            --text-light: #7f8c8d;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f8f9fa;
+            color: var(--text);
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        header {
+            background-color: var(--primary);
+            color: white;
+            padding: 20px 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 24px;
+            font-weight: 700;
+        }
+        
+        .logo span {
+            color: var(--secondary);
+        }
+        
+        .nav-links {
+            display: flex;
+            list-style: none;
+        }
+        
+        .nav-links li {
+            margin-left: 30px;
+        }
+        
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+        
+        .nav-links a:hover {
+            color: var(--secondary);
+        }
+        
+        .page-header {
+            background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('/api/placeholder/1200/400') center/cover;
+            color: white;
+            padding: 100px 0;
+            text-align: center;
+        }
+        
+        .page-header h1 {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+        
+        .section {
+            padding: 80px 0;
+        }
+        
+        .section-title {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+        
+        .section-title h2 {
+            font-size: 36px;
+            color: var(--dark);
+            position: relative;
+            display: inline-block;
+            padding-bottom: 15px;
+        }
+        
+        .section-title h2::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 3px;
+            background-color: var(--secondary);
+        }
+        
+        .service-category {
+            margin-bottom: 60px;
+        }
+        
+        .service-category-title {
+            font-size: 28px;
+            color: var(--dark);
+            margin-bottom: 30px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--secondary);
+        }
+        
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+        }
+        
+        .service-card {
+            background-color: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            transition: transform 0.3s, box-shadow 0.3s;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .service-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+        }
+        
+        .service-icon {
+            font-size: 40px;
+            margin-bottom: 20px;
+            color: var(--secondary);
+        }
+        
+        .service-title {
+            font-size: 22px;
+            margin-bottom: 15px;
+            color: var(--dark);
+        }
+        
+        .service-description {
+            margin-bottom: 20px;
+            flex-grow: 1;
+        }
+        
+        .service-features {
+            list-style: none;
+            margin-bottom: 20px;
+        }
+        
+        .service-features li {
+            margin-bottom: 10px;
+            display: flex;
+            align-items: flex-start;
+        }
+        
+        .service-features li::before {
+            content: '✓';
+            color: var(--secondary);
+            margin-right: 10px;
+            font-weight: bold;
+        }
+        
+        .approach {
+            background-color: var(--light);
+        }
+        
+        .approach-steps {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            counter-reset: step-counter;
+        }
+        
+        .approach-step {
+            flex-basis: calc(33.333% - 20px);
+            margin-bottom: 40px;
+            position: relative;
+            padding-left: 70px;
+        }
+        
+        .approach-step::before {
+            counter-increment: step-counter;
+            content: counter(step-counter);
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 50px;
+            height: 50px;
+            background-color: var(--secondary);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        
+        .approach-step-title {
+            font-size: 20px;
+            margin-bottom: 15px;
+            color: var(--dark);
+        }
+        
+        .cta {
+            background-color: var(--primary);
+            color: white;
+            text-align: center;
+        }
+        
+        .cta h2 {
+            font-size: 36px;
+            margin-bottom: 20px;
+        }
+        
+        .cta p {
+            font-size: 18px;
+            margin-bottom: 30px;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 12px 30px;
+            background-color: var(--secondary);
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: 500;
+            transition: background-color 0.3s;
+        }
+        
+        .btn:hover {
+            background-color: #2980b9;
+        }
+        
+        footer {
+            background-color: var(--dark);
+            color: white;
+            padding: 60px 0 30px;
+        }
+        
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+        
+        .footer-column h3 {
+            font-size: 20px;
+            margin-bottom: 20px;
+            color: var(--secondary);
+        }
+        
+        .footer-links {
+            list-style: none;
+        }
+        
+        .footer-links li {
+            margin-bottom: 10px;
+        }
+        
+        .footer-links a {
+            color: #bdc3c7;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+        
+        .footer-links a:hover {
+            color: white;
+        }
+        
+        .contact-info {
+            list-style: none;
+        }
+        
+        .contact-info li {
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .social-links {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .social-links a {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            background-color: rgba(255,255,255,0.1);
+            border-radius: 50%;
+            color: white;
+            text-decoration: none;
+            transition: background-color 0.3s;
+        }
+        
+        .social-links a:hover {
+            background-color: var(--secondary);
+        }
+        
+        .footer-bottom {
+            border-top: 1px solid rgba(255,255,255,0.1);
+            padding-top: 30px;
+            text-align: center;
+            color: #bdc3c7;
+            font-size: 14px;
+        }
+        
+        @media (max-width: 992px) {
+            .approach-step {
+                flex-basis: calc(50% - 20px);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+            
+            .approach-step {
+                flex-basis: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <nav>
+                <div class="logo">Chris <span>Bare</span> Consulting</div>
+                <ul class="nav-links">
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="about.html">About</a></li>
+                    <li><a href="#" class="active">Services</a></li>
+                    <li><a href="#contact">Contact</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <section class="page-header">
+        <div class="container">
+            <h1>Services</h1>
+            <p>Strategic solutions for your most complex challenges</p>
+        </div>
+    </section>
+
+    <section class="section">
+        <div class="container">
+            <div class="section-title">
+                <h2>How I Can Help Your Organization</h2>
+            </div>
+            
+            <div class="service-category">
+                <h3 class="service-category-title">Strategic Planning & Business Transformation</h3>
+                <div class="services-grid">
+                    <div class="service-card">
+                        <div class="service-icon">🔍</div>
+                        <h4 class="service-title">Strategic Planning & Execution</h4>
+                        <p class="service-description">Develop and implement customized business strategies to accelerate growth, optimize operations, and improve bottom-line results.</p>
+                        <ul class="service-features">
+                            <li>Strategic roadmap development</li>
+                            <li>Vision and mission alignment</li>
+                            <li>Strategic goal setting and KPI development</li>
+                            <li>Implementation planning and execution</li>
+                        </ul>
+                    </div>
+                    <div class="service-card">
+                        <div class="service-icon">🔄</div>
+                        <h4 class="service-title">Business Transformation & Turnaround</h4>
+                        <p class="service-description">Lead rapid operational changes, monitor outcomes, and adjust strategies to ensure sustained business success.</p>
+                        <ul class="service-features">
+                            <li>Transformation roadmap creation</li>
+                            <li>Change management frameworks</li>
+                            <li>Turnaround strategy development</li>
+                            <li>Performance monitoring and adjustment</li>
+                        </ul>
+                    </div>
+                    <div class="service-card">
+                        <div class="service-icon">📊</div>
+                        <h4 class="service-title">Operational Optimization</h4>
+                        <p class="service-description">Design and streamline business processes, improving efficiency, scalability, and customer experience.</p>
+                        <ul class="service-features">
+                            <li>Process analysis and redesign</li>
+                            <li>Efficiency improvement initiatives</li>
+                            <li>Scalability planning</li>
+                            <li>Customer experience enhancement</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="service-category">
+                <h3 class="service-category-title">Growth & Development</h3>
+                <div class="services-grid">
+                    <div class="service-card">
+                        <div class="service-icon">🤝</div>
+                        <h4 class="service-title">Mergers & Acquisitions</h4>
+                        <p class="service-description">Conduct due diligence, integration planning, and execution to maximize post-acquisition success.</p>
+                        <ul class="service-features">
+                            <li>Due diligence management</li>
+                            <li>Integration planning and execution</li>
+                            <li>Culture alignment strategies</li>
+                            <li>Post-merger optimization</li>
+                        </ul>
+                    </div>
+                    <div class="service-card">
+                        <div class="service-icon">🚀</div>
+                        <h4 class="service-title">Product & Service Commercialization</h4>
+                        <p class="service-description">Plan and execute go-to-market strategies to expand revenue streams and capture market share.</p>
+                        <ul class="service-features">
+                            <li>Market analysis and positioning</li>
+                            <li>Go-to-market strategy development</li>
+                            <li>Product launch planning</li>
+                            <li>Sales enablement and training</li>
+                        </ul>
+                    </div>
+                    <div class="service-card">
+                        <div class="service-icon">👥</div>
+                        <h4 class="service-title">Organization Design & Development</h4>
+                        <p class="service-description">Build and mentor high-performing teams, ensuring long-term business sustainability and operational excellence.</p>
+                        <ul class="service-features">
+                            <li>Organizational structure design</li>
+                            <li>Team composition and development</li>
+                            <li>Leadership coaching and mentoring</li>
+                            <li>Performance management systems</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="service-category">
+                <h3 class="service-category-title">Leadership & Risk Management</h3>
+                <div class="services-grid">
+                    <div class="service-card">
+                        <div class="service-icon">🎯</div>
+                        <h4 class="service-title">Client Advisory & Coaching</h4>
+                        <p class="service-description">Partner with executives to develop actionable roadmaps and drive measurable improvements in performance, efficiency, and profitability.</p>
+                        <ul class="service-features">
+                            <li>Executive leadership coaching</li>
+                            <li>Decision-making frameworks</li>
+                            <li>Strategic business advising</li>
+                            <li>Performance improvement planning</li>
+                        </ul>
+                    </div>
+                    <div class="service-card">
+                        <div class="service-icon">🛡️</div>
+                        <h4 class="service-title">Risk Management & Compliance</h4>
+                        <p class="service-description">Design and implement governance frameworks to mitigate risks, ensure regulatory compliance, and improve corporate accountability.</p>
+                        <ul class="service-features">
+                            <li>Risk assessment and mitigation planning</li>
+                            <li>Compliance program development</li>
+                            <li>Governance framework design</li>
+                            <li>Audit preparation and management</li>
+                        </ul>
+                    </div>
+                    <div class="service-card">
+                        <div class="service-icon">💻</div>
+                        <h4 class="service-title">Technology Integration & IT Governance</h4>
+                        <p class="service-description">Oversee ERP, CRM, and IT infrastructure implementations, ensuring seamless system integration and business continuity.</p>
+                        <ul class="service-features">
+                            <li>IT strategy development</li>
+                            <li>System implementation oversight</li>
+                            <li>Technology roadmap creation</li>
+                            <li>IT governance and policy development</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section approach">
+        <div class="container">
+            <div class="section-title">
+                <h2>My Approach</h2>
+            </div>
+            <div class="approach-steps">
+                <div class="approach-step">
+                    <h3 class="approach-step-title">Discovery & Assessment</h3>
+                    <p>Deep dive into your organization's current state, challenges, and opportunities. Conduct thorough analysis to identify root causes and areas for improvement.</p>
+                </div>
+                <div class="approach-step">
+                    <h3 class="approach-step-title">Strategy Development</h3>
+                    <p>Create a customized strategic plan aligned with your goals and vision. Prioritize initiatives based on impact and feasibility.</p>
+                </div>
+                <div class="approach-step">
+                    <h3 class="approach-step-title">Implementation Planning</h3>
+                    <p>Develop detailed roadmaps and action plans. Establish clear responsibilities, timelines, and key performance indicators.</p>
+                </div>
+                <div class="approach-step">
+                    <h3 class="approach-step-title">Execution Support</h3>
+                    <p>Provide hands-on leadership and guidance throughout implementation. Overcome obstacles and ensure alignment across teams.</p>
+                </div>
+                <div class="approach-step">
+                    <h3 class="approach-step-title">Monitoring & Optimization</h3>
+                    <p>Track progress against metrics and adjust strategies as needed. Identify opportunities for continuous improvement.</p>
+                </div>
+                <div class="approach-step">
+                    <h3 class="approach-step-title">Knowledge Transfer</h3>
+                    <p>Ensure your team has the skills and capabilities to maintain momentum. Develop sustainable processes and documentation.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section cta">
+        <div class="container">
+            <h2>Ready to Transform Your Business?</h2>
+            <p>Let's discuss how my services can help you overcome challenges and achieve your strategic goals.</p>
+            <a href="#contact" class="btn">Schedule a Consultation</a>
+        </div>
+    </section>
+
+    <footer id="contact">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-column">
+                    <h3>Chris Bare Consulting</h3>
+                    <p>Turning complexity into action, driving strategic initiatives that align vision with execution.</p>
+                    <div class="social-links">
+                        <a href="https://www.linkedin.com/in/kitbare" target="_blank">in</a>
+                        <a href="#" target="_blank">f</a>
+                        <a href="#" target="_blank">t</a>
+                    </div>
+                </div>
+                <div class="footer-column">
+                    <h3>Quick Links</h3>
+                    <ul class="footer-links">
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="about.html">About</a></li>
+                        <li><a href="#">Services</a></li>
+                        <li><a href="#contact">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Contact Info</h3>
+                    <ul class="contact-info">
+                        <li>📧 kitbare@yahoo.com</li>
+                        <li>📱 +1 949 878 8156</li>
+                        <li>📍 Orange County, California</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 Chris Bare Consulting. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>
