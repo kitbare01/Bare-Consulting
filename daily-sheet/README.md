@@ -7,6 +7,12 @@ sheet, a checkbox per task, and whatever isn't finished carries to tomorrow.
 
 - **Sections** — one per client, plus admin. Rename, recolour, reorder,
   collapse, delete.
+- **Marking a line for today** — on the paper sheet, drawing a checkbox
+  beside an item is the commitment: it means *I intend to do this today*,
+  as distinct from the running list around it. That mark is its own thing
+  here, the `▸` on each line. Marked lines carry a rail down the left
+  edge on the full sheet, and the **Today** tab shows only them. A line
+  still marked days later says so, in amber and then red.
 - **Three kinds of line** — a task with a checkbox, a task marked *in prog*
   or *waiting*, and a note that carries no checkbox at all, for the standing
   context that sits on a paper sheet without ever being "done". Any line can
@@ -22,7 +28,8 @@ sheet, a checkbox per task, and whatever isn't finished carries to tomorrow.
   work past midnight still lands on the day it felt like.
 - **Import** — paste a whole sheet in at once: `#` starts a section, `/`
   marks a task in progress, `-` makes a note, `x` files a line straight into
-  today's log, and two leading spaces make a sub-line. The same prefixes work
+  today's log, `!` marks it for today, and two leading spaces make a
+  sub-line. The same prefixes work
   when typing a single line into a section.
 - **Copy and print** — copy today's sheet (or the whole log) as plain text,
   or print the sheet with the interface stripped out.
