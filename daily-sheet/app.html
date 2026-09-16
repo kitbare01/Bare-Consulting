@@ -1,0 +1,1245 @@
+<title>Daily Sheet</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Public+Sans:wght@400;500;600&family=Spectral:wght@500;600&display=swap">
+<style>
+:root{
+  --paper:#eceee6; --sheet:#fbfcf8; --sheet-2:#f4f6f0;
+  --ink:#1b2931; --ink-2:#58686f; --ink-3:#8a969b;
+  --rule:#d6dbd0; --rule-2:#e6e9e0;
+  --accent:#24507e; --accent-soft:#e1eaf3;
+  --pencil:#ad3f2c; --pencil-soft:#f6e3df;
+  --amber:#87600f; --amber-soft:#f4ecd6;
+  --done:#3d7154;
+  --shadow:0 1px 2px rgba(27,41,49,.05), 0 10px 28px -16px rgba(27,41,49,.25);
+  --font-body:'Public Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --font-display:'Spectral',Georgia,'Times New Roman',serif;
+  --font-mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:#13181a; --sheet:#1b2124; --sheet-2:#20272a;
+  --ink:#e3e8e1; --ink-2:#9aa6a8; --ink-3:#6d787b;
+  --rule:#2e3639; --rule-2:#262d30;
+  --accent:#84aee0; --accent-soft:#22303d;
+  --pencil:#e08b73; --pencil-soft:#3a2723;
+  --amber:#d6ae62; --amber-soft:#332b18;
+  --done:#6faf87;
+  --shadow:0 1px 2px rgba(0,0,0,.3), 0 10px 28px -16px rgba(0,0,0,.6);
+}}
+:root[data-theme="dark"]{
+  --paper:#13181a; --sheet:#1b2124; --sheet-2:#20272a;
+  --ink:#e3e8e1; --ink-2:#9aa6a8; --ink-3:#6d787b;
+  --rule:#2e3639; --rule-2:#262d30;
+  --accent:#84aee0; --accent-soft:#22303d;
+  --pencil:#e08b73; --pencil-soft:#3a2723;
+  --amber:#d6ae62; --amber-soft:#332b18;
+  --done:#6faf87;
+  --shadow:0 1px 2px rgba(0,0,0,.3), 0 10px 28px -16px rgba(0,0,0,.6);
+}
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0; background:var(--paper); color:var(--ink);
+  font-family:var(--font-body); font-size:15px; line-height:1.5;
+  -webkit-text-size-adjust:100%;
+}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+input{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:3px}
+
+.wrap{max-width:780px;margin:0 auto;padding-inline:16px;padding-block:0 96px}
+
+/* ---------- masthead ---------- */
+.masthead{
+  position:sticky; top:env(safe-area-inset-top,0px); z-index:30;
+  background:var(--paper); border-bottom:1px solid var(--rule);
+}
+.masthead-in{
+  max-width:780px;margin:0 auto;padding-inline:16px;padding-block:14px 10px;
+  display:flex;flex-wrap:wrap;gap:10px 16px;align-items:flex-end;justify-content:space-between;
+}
+.dateblock{min-width:0}
+.dateline{
+  font-family:var(--font-display);font-weight:600;font-size:23px;line-height:1.15;
+  letter-spacing:-.01em;text-wrap:balance;margin:0;
+}
+.tally{
+  font-family:var(--font-mono);font-size:11.5px;letter-spacing:.02em;
+  color:var(--ink-2);margin-top:5px;display:flex;flex-wrap:wrap;gap:4px 10px;
+}
+.tally b{font-weight:500;color:var(--ink)}
+.tally .warn{color:var(--pencil)}
+.tools{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.tabs{display:flex;background:var(--sheet-2);border:1px solid var(--rule);border-radius:7px;padding:2px}
+.tab{
+  font-size:12.5px;font-weight:500;padding:5px 13px;border-radius:5px;
+  color:var(--ink-2);white-space:nowrap;
+}
+.tab[aria-selected="true"]{background:var(--sheet);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.iconbtn{
+  width:31px;height:31px;display:grid;place-items:center;border-radius:6px;
+  color:var(--ink-2);border:1px solid transparent;
+}
+.iconbtn:hover{background:var(--sheet-2);color:var(--ink);border-color:var(--rule)}
+.iconbtn svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+
+/* ---------- the sheet ---------- */
+.sheet{
+  background:var(--sheet);border:1px solid var(--rule);border-radius:3px;
+  box-shadow:var(--shadow);margin-top:18px;
+}
+.section{border-bottom:1px solid var(--rule-2)}
+.section:last-of-type{border-bottom:0}
+.sechead{
+  display:flex;align-items:center;gap:9px;
+  padding:14px 14px 8px 14px;position:relative;
+}
+.dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.secname{
+  font-family:var(--font-mono);font-size:11.5px;font-weight:500;
+  letter-spacing:.1em;text-transform:uppercase;color:var(--ink);
+  min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.seccount{font-family:var(--font-mono);font-size:11px;color:var(--ink-3);margin-left:auto;flex-shrink:0}
+.secedit{
+  font-family:var(--font-mono);font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;
+  background:var(--sheet-2);border:1px solid var(--accent);border-radius:4px;
+  padding:3px 7px;width:100%;max-width:340px;
+}
+
+/* margin rule, like a legal pad */
+.rows{position:relative}
+.rows::before{
+  content:"";position:absolute;left:38px;top:0;bottom:0;width:1px;
+  background:var(--pencil);opacity:.3;
+}
+.row{
+  display:flex;align-items:flex-start;gap:0;position:relative;
+  min-height:34px;
+}
+.row:hover{background:var(--sheet-2)}
+.row.dragging{opacity:.4}
+.row.dropbefore{box-shadow:inset 0 2px 0 -1px var(--accent)}
+.row.dropafter{box-shadow:inset 0 -2px 0 -1px var(--accent)}
+.box{
+  width:38px;flex-shrink:0;display:flex;justify-content:center;
+  padding-top:8px;align-self:stretch;
+}
+.box button{
+  width:17px;height:17px;border:1.6px solid var(--ink-3);border-radius:2.5px;
+  display:grid;place-items:center;transition:border-color .12s,background .12s;
+}
+.box button:hover{border-color:var(--done);background:color-mix(in srgb,var(--done) 12%,transparent)}
+.box button svg{width:12px;height:12px;fill:none;stroke:var(--done);stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;opacity:0}
+.row.done .box button{border-color:var(--done);background:color-mix(in srgb,var(--done) 14%,transparent)}
+.row.done .box button svg{opacity:1;animation:tick .18s ease-out}
+@keyframes tick{from{transform:scale(.5);opacity:0}to{transform:scale(1);opacity:1}}
+@media (prefers-reduced-motion:reduce){.row.done .box button svg{animation:none}}
+
+.text{
+  flex:1;min-width:0;padding:7px 4px 7px 10px;
+  word-break:break-word;cursor:text;
+}
+.row.done .text{color:var(--ink-3);text-decoration:line-through;text-decoration-color:var(--ink-3)}
+.textedit{
+  flex:1;min-width:0;margin:4px 4px 4px 8px;padding:3px 7px;
+  background:var(--sheet-2);border:1px solid var(--accent);border-radius:4px;
+}
+.meta{display:flex;align-items:center;gap:2px;padding:6px 8px 6px 0;flex-shrink:0}
+.age{
+  font-family:var(--font-mono);font-size:10.5px;font-weight:500;
+  padding:2px 5px;border-radius:3px;white-space:nowrap;
+  background:var(--sheet-2);color:var(--ink-3);border:1px solid var(--rule-2);
+}
+.age.warm{background:var(--amber-soft);color:var(--amber);border-color:transparent}
+.age.hot{background:var(--pencil-soft);color:var(--pencil);border-color:transparent}
+.dots{
+  width:24px;height:24px;display:grid;place-items:center;border-radius:5px;
+  color:var(--ink-3);opacity:0;
+}
+.row:hover .dots,.dots:focus-visible,.dots.open{opacity:1}
+@media (hover:none){.dots{opacity:1}}
+.dots:hover{background:var(--rule-2);color:var(--ink)}
+.dots svg{width:15px;height:15px;fill:currentColor}
+.grip{
+  width:0;overflow:hidden;
+}
+@media (hover:hover){
+  .grip{width:14px;flex-shrink:0;display:flex;align-items:center;justify-content:center;
+    color:var(--ink-3);opacity:0;cursor:grab;padding-top:2px}
+  .row:hover .grip{opacity:.65}
+  .grip svg{width:10px;height:14px;fill:currentColor}
+}
+
+/* add line */
+.addline{display:flex;align-items:center;padding-bottom:12px}
+.addplus{
+  width:38px;flex-shrink:0;display:grid;place-items:center;color:var(--ink-3);
+  font-family:var(--font-mono);font-size:15px;line-height:1;
+}
+.addline input{
+  flex:1;min-width:0;background:none;border:0;padding:6px 10px 6px 10px;
+  border-bottom:1px dashed transparent;
+}
+.addline input::placeholder{color:var(--ink-3)}
+.addline input:focus{outline:none;border-bottom-color:var(--accent)}
+
+/* menus */
+.menu{
+  position:absolute;right:8px;top:calc(100% - 4px);z-index:20;
+  background:var(--sheet);border:1px solid var(--rule);border-radius:7px;
+  box-shadow:var(--shadow);padding:4px;min-width:186px;
+}
+.menu button{
+  display:flex;width:100%;align-items:center;gap:8px;
+  padding:6px 9px;border-radius:5px;font-size:13px;text-align:left;color:var(--ink);
+}
+.menu button:hover{background:var(--sheet-2)}
+.menu button.danger{color:var(--pencil)}
+.menu .sep{height:1px;background:var(--rule-2);margin:4px 2px}
+.menu .lbl{
+  font-family:var(--font-mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--ink-3);padding:6px 9px 3px;
+}
+.menu .swatch{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.menuwrap{position:relative}
+
+/* done cluster */
+.donehead{
+  font-family:var(--font-mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--ink-3);padding:10px 14px 2px 38px;
+}
+.undo{
+  width:24px;height:24px;display:grid;place-items:center;border-radius:5px;color:var(--ink-3);opacity:0;
+}
+.row:hover .undo{opacity:1}
+@media (hover:none){.undo{opacity:.7}}
+.undo:hover{background:var(--rule-2);color:var(--ink)}
+.undo svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+
+/* footers / misc */
+.addsec{
+  display:flex;align-items:center;gap:8px;padding:13px 14px;width:100%;
+  color:var(--ink-3);font-size:13px;border-top:1px solid var(--rule-2);
+}
+.addsec:hover{background:var(--sheet-2);color:var(--ink)}
+.empty{padding:20px 14px 20px 38px;color:var(--ink-3);font-size:13.5px;font-style:italic}
+
+/* log view */
+.logday{margin-top:18px;background:var(--sheet);border:1px solid var(--rule);border-radius:3px;box-shadow:var(--shadow);overflow:hidden}
+.logdate{
+  display:flex;align-items:baseline;gap:10px;padding:12px 14px;border-bottom:1px solid var(--rule-2);
+}
+.logdate h3{margin:0;font-family:var(--font-display);font-size:16px;font-weight:600}
+.logdate .n{font-family:var(--font-mono);font-size:11px;color:var(--ink-3);margin-left:auto}
+.loggroup{padding:9px 14px 9px 14px;border-bottom:1px solid var(--rule-2)}
+.loggroup:last-child{border-bottom:0}
+.loggroup .g{
+  display:flex;align-items:center;gap:7px;
+  font-family:var(--font-mono);font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3);
+  margin-bottom:4px;
+}
+.logitem{display:flex;gap:9px;align-items:baseline;padding:2px 0;font-size:14px}
+.logitem .ck{color:var(--done);font-family:var(--font-mono);font-size:12px;flex-shrink:0}
+.logitem .carried{font-family:var(--font-mono);font-size:10.5px;color:var(--ink-3);margin-left:auto;flex-shrink:0;padding-left:8px}
+.blank{
+  text-align:center;color:var(--ink-3);font-style:italic;font-size:14px;
+  padding:44px 16px;border:1px dashed var(--rule);border-radius:3px;margin-top:18px;
+}
+
+/* settings / copy panel */
+.panel{
+  margin-top:18px;background:var(--sheet);border:1px solid var(--rule);
+  border-radius:3px;box-shadow:var(--shadow);padding:16px 14px;
+}
+.panel h2{
+  margin:0 0 12px;font-family:var(--font-mono);font-size:11px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--ink-3);font-weight:500;
+}
+.field{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;justify-content:space-between;padding:8px 0;border-top:1px solid var(--rule-2)}
+.field:first-of-type{border-top:0}
+.field .k{font-size:14px}
+.field .h{font-size:12px;color:var(--ink-3);width:100%;margin-top:-2px}
+.field select,.field .val{
+  font-family:var(--font-mono);font-size:12.5px;padding:4px 8px;
+  background:var(--sheet-2);border:1px solid var(--rule);border-radius:5px;color:var(--ink);
+}
+.btn{
+  font-size:13px;font-weight:500;padding:6px 12px;border-radius:6px;
+  border:1px solid var(--rule);background:var(--sheet-2);color:var(--ink);
+}
+.btn:hover{border-color:var(--ink-3)}
+.copybox{width:100%;min-height:210px;margin-top:10px;font-family:var(--font-mono);font-size:12px;
+  background:var(--sheet-2);border:1px solid var(--rule);border-radius:5px;padding:9px;color:var(--ink);resize:vertical}
+.toast{
+  position:fixed;left:50%;transform:translateX(-50%);
+  bottom:calc(20px + env(safe-area-inset-bottom,0px));z-index:60;
+  background:var(--ink);color:var(--sheet);font-size:13px;
+  padding:8px 15px;border-radius:99px;box-shadow:var(--shadow);
+}
+
+@media (max-width:460px){
+  .dateline{font-size:19px}
+  .masthead-in{padding-block:11px 9px}
+  .tab{padding:5px 10px}
+  .rows::before{left:34px}
+  .box,.addplus{width:34px}
+  .donehead{padding-left:34px}
+}
+
+@media print{
+  :root{--paper:#fff;--sheet:#fff;--sheet-2:#fff;--ink:#000;--ink-2:#333;--ink-3:#666;--rule:#bbb;--rule-2:#ddd}
+  .masthead{position:static;border-bottom:1px solid #000}
+  .tools,.dots,.grip,.addline,.addsec,.iconbtn,.panel,.menu,.undo{display:none !important}
+  .sheet,.logday{box-shadow:none;border-color:#999;break-inside:auto}
+  .section{break-inside:avoid}
+  body{background:#fff}
+}
+</style>
+
+<div class="masthead">
+  <div class="masthead-in">
+    <div class="dateblock">
+      <h1 class="dateline" id="dateline">Daily Sheet</h1>
+      <div class="tally" id="tally"></div>
+    </div>
+    <div class="tools">
+      <div class="tabs" role="tablist">
+        <button class="tab" role="tab" id="tab-today" data-act="view" data-view="today" aria-selected="true">Today</button>
+        <button class="tab" role="tab" id="tab-log" data-act="view" data-view="log" aria-selected="false">Log</button>
+      </div>
+      <button class="iconbtn" id="btn-copy" data-act="copy" title="Copy today as text" aria-label="Copy today as text"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h8"/></svg></button>
+      <button class="iconbtn" id="btn-print" data-act="print" title="Print this sheet" aria-label="Print this sheet"><svg viewBox="0 0 24 24"><path d="M6 9V3h12v6"/><rect x="4" y="9" width="16" height="7" rx="2"/><path d="M8 14h8v7H8z"/></svg></button>
+      <button class="iconbtn" id="btn-settings" data-act="settings" title="Settings" aria-label="Settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-2.7 1.1V21a2 2 0 1 1-4 0v-.1A1.6 1.6 0 0 0 7.5 19l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0-1.1-2.7H3a2 2 0 1 1 0-4h.1A1.6 1.6 0 0 0 4.6 7.5l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 2.7-1.1V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 2.7 1.1l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0 1.1 2.7H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1.3z"/></svg></button>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+  <div id="main"></div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ============================ helpers ============================ */
+  var STORE_KEY = "daily-sheet-v1";
+  var PALETTE = ["#24507e","#3d7154","#7a3f6d","#87600f","#4a5b66","#a0472f"];
+  var ICON = {
+    check:'<svg viewBox="0 0 24 24"><path d="M4 12.5 9.5 18 20 6.5"/></svg>',
+    dots :'<svg viewBox="0 0 24 24"><circle cx="12" cy="5.5" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="12" cy="18.5" r="1.7"/></svg>',
+    grip :'<svg viewBox="0 0 10 14"><circle cx="2" cy="2" r="1.3"/><circle cx="8" cy="2" r="1.3"/><circle cx="2" cy="7" r="1.3"/><circle cx="8" cy="7" r="1.3"/><circle cx="2" cy="12" r="1.3"/><circle cx="8" cy="12" r="1.3"/></svg>',
+    undo :'<svg viewBox="0 0 24 24"><path d="M3 10h11a5 5 0 0 1 0 10h-3"/><path d="M7 6 3 10l4 4"/></svg>'
+  };
+
+  function esc(s){
+    return String(s == null ? "" : s)
+      .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+      .replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+  }
+  function uid(){
+    return Math.random().toString(36).slice(2,9) + Date.now().toString(36).slice(-4);
+  }
+  function pad(n){ return n < 10 ? "0" + n : "" + n; }
+
+  /* Snapshots from the shared store are frozen; we edit state in place,
+     so every document is cloned on the way in. */
+  function clone(o){
+    try { return JSON.parse(JSON.stringify(o)); } catch(e){ return o; }
+  }
+
+  /* Day boundary respects a configurable start hour, so work past
+     midnight still belongs to the day it felt like. */
+  function dayKey(ts, startHour){
+    var d = new Date(ts);
+    d.setHours(d.getHours() - (startHour || 0));
+    return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate());
+  }
+  function keyToDate(k){
+    var p = String(k).split("-");
+    return new Date(+p[0], +p[1] - 1, +p[2]);
+  }
+  function daysBetween(a, b){
+    return Math.round((keyToDate(b) - keyToDate(a)) / 86400000);
+  }
+  function fmtLong(k){
+    return keyToDate(k).toLocaleDateString(undefined,{weekday:"long", month:"long", day:"numeric"});
+  }
+  function fmtShort(k){
+    return keyToDate(k).toLocaleDateString(undefined,{month:"short", day:"numeric"});
+  }
+  function plural(n, one, many){ return n + " " + (n === 1 ? one : many); }
+
+  /* ============================ storage ============================ */
+  /* Two backends behind one interface: the artifact's shared store when
+     the page runs inside claude.ai, otherwise this browser only. Open
+     tasks and sections live in ONE document (they are small, bounded,
+     and always read together); each finished day is its own document,
+     which keeps the archive from outgrowing the document budget. */
+
+  function makeWriter(write){
+    var pending = null, timer = null, busy = false;
+    function flush(){
+      if (busy || pending === null) return;
+      var body = pending; pending = null; busy = true;
+      Promise.resolve()
+        .then(function(){ return write(body); })
+        .catch(function(e){ showToast("Could not save — " + (e && e.message ? e.message : "try again")); })
+        .then(function(){ busy = false; if (pending !== null) flush(); });
+    }
+    return function(body){
+      pending = body;
+      clearTimeout(timer);
+      timer = setTimeout(flush, 220);
+    };
+  }
+
+  function localStore(){
+    function read(){
+      try { return JSON.parse(localStorage.getItem(STORE_KEY) || "{}") || {}; }
+      catch(e){ return {}; }
+    }
+    function write(o){
+      try { localStorage.setItem(STORE_KEY, JSON.stringify(o)); } catch(e){}
+    }
+    return {
+      kind: "local",
+      watchBoard: function(cb){
+        setTimeout(function(){ cb(read().board || null); }, 0);
+        return function(){};
+      },
+      saveBoard: function(b){ var o = read(); o.board = b; write(o); },
+      watchDay: function(k, cb){
+        setTimeout(function(){ cb((read().days || {})[k] || null); }, 0);
+        return function(){};
+      },
+      saveDay: function(k, d){ var o = read(); o.days = o.days || {}; o.days[k] = d; write(o); },
+      listDays: function(n){
+        var days = read().days || {};
+        var keys = Object.keys(days).sort().reverse().slice(0, n);
+        return Promise.resolve(keys.map(function(k){ return days[k]; }));
+      }
+    };
+  }
+
+  function cloudStore(db){
+    var boardRef = db.doc("board/state");
+    var writeBoard = makeWriter(function(d){ return boardRef.set(d); });
+    var dayWriters = {};
+    return {
+      kind: "cloud",
+      watchBoard: function(cb){
+        return boardRef.onSnapshot(
+          function(s){ cb(s.exists ? s.data() : null); },
+          function(e){ showToast("Sync interrupted (" + e.code + ")"); }
+        );
+      },
+      saveBoard: function(b){ writeBoard(b); },
+      watchDay: function(k, cb){
+        return db.doc("archive/" + k).onSnapshot(
+          function(s){ cb(s.exists ? s.data() : null); },
+          function(){}
+        );
+      },
+      saveDay: function(k, d){
+        if (!dayWriters[k]) {
+          dayWriters[k] = makeWriter(function(x){ return db.doc("archive/" + k).set(x); });
+        }
+        dayWriters[k](d);
+      },
+      listDays: function(n){
+        return db.collection("archive").orderBy("date","desc").limit(n).get()
+          .then(function(s){ return s.docs.map(function(d){ return d.data(); }); })
+          .catch(function(){ return []; });
+      }
+    };
+  }
+
+  /* ============================ state ============================ */
+  var store = null;
+  var unsubDay = null;
+  var state = {
+    board: null,
+    today: dayKey(Date.now(), 4),
+    day: null,
+    logDays: null,
+    view: "today",
+    panel: null,        // null | "settings" | "copy"
+    copyText: "",
+    editing: null,      // {kind:"task"|"section", id}
+    menu: null,         // {kind:"task"|"section", id}
+    confirm: null,      // id pending delete confirmation
+    drafts: {},         // sectionId -> in-progress text
+    focus: null,        // element id to restore focus to
+    dragId: null
+  };
+
+  function seedBoard(){
+    var today = state.today;
+    var secs = [
+      { id: uid(), name: "Client Work",  color: PALETTE[0] },
+      { id: uid(), name: "Work — Admin", color: PALETTE[1] },
+      { id: uid(), name: "Personal",     color: PALETTE[2] }
+    ];
+    function t(i, text){
+      return { id: uid(), sectionId: secs[i].id, text: text, created: today };
+    }
+    return {
+      v: 1,
+      settings: { dayStart: 4 },
+      sections: secs,
+      tasks: [
+        t(0, "Rename these sections — one per client you're tracking"),
+        t(0, "Add a task: type on the line under a section, press Enter"),
+        t(1, "Check this one off — it drops into the Log, not the void"),
+        t(1, "Leave this one open — it rolls to tomorrow on its own, with a day count"),
+        t(2, "Drag a task by its handle, or use ⋯ to move it to another section")
+      ]
+    };
+  }
+
+  function commitBoard(){
+    state.board.updated = Date.now();
+    store.saveBoard(state.board);
+    render();
+  }
+  function commitDay(day){
+    state.day = day;
+    store.saveDay(day.date, day);
+    render();
+  }
+
+  /* ============================ derived ============================ */
+  function tasksOf(sectionId){
+    return state.board.tasks.filter(function(t){ return t.sectionId === sectionId; });
+  }
+  function doneOf(sectionId){
+    var items = (state.day && state.day.items) || [];
+    return items.filter(function(i){ return i.sectionId === sectionId; });
+  }
+  function ageOf(task){
+    var n = daysBetween(task.created, state.today);
+    return n > 0 ? n : 0;
+  }
+  function counts(){
+    var open = state.board.tasks.length;
+    var done = ((state.day && state.day.items) || []).length;
+    var carried = state.board.tasks.filter(function(t){ return ageOf(t) > 0; }).length;
+    var stale = state.board.tasks.filter(function(t){ return ageOf(t) >= 7; }).length;
+    return { open: open, done: done, carried: carried, stale: stale };
+  }
+
+  /* ============================ actions ============================ */
+  function addTask(sectionId, text){
+    text = (text || "").trim();
+    if (!text) return;
+    var idx = -1;
+    for (var i = state.board.tasks.length - 1; i >= 0; i--){
+      if (state.board.tasks[i].sectionId === sectionId){ idx = i; break; }
+    }
+    var task = { id: uid(), sectionId: sectionId, text: text, created: state.today };
+    state.board.tasks.splice(idx + 1, 0, task);
+    state.drafts[sectionId] = "";
+    state.focus = "add-" + sectionId;
+    commitBoard();
+  }
+
+  function completeTask(id){
+    var i = state.board.tasks.findIndex(function(t){ return t.id === id; });
+    if (i < 0) return;
+    var task = state.board.tasks[i];
+    var sec = state.board.sections.find(function(s){ return s.id === task.sectionId; });
+    var day = state.day || { date: state.today, items: [] };
+    var items = day.items.slice();
+    items.unshift({
+      id: task.id, text: task.text, sectionId: task.sectionId,
+      sectionName: sec ? sec.name : "Unfiled",
+      color: sec ? sec.color : PALETTE[4],
+      created: task.created, doneAt: Date.now(), age: ageOf(task)
+    });
+    state.board.tasks.splice(i, 1);
+    state.board.updated = Date.now();
+    store.saveBoard(state.board);
+    commitDay({ date: state.today, items: items });
+  }
+
+  function reopenTask(id){
+    if (!state.day) return;
+    var i = state.day.items.findIndex(function(t){ return t.id === id; });
+    if (i < 0) return;
+    var item = state.day.items[i];
+    var exists = state.board.sections.some(function(s){ return s.id === item.sectionId; });
+    state.board.tasks.push({
+      id: item.id,
+      sectionId: exists ? item.sectionId : state.board.sections[0].id,
+      text: item.text,
+      created: item.created || state.today
+    });
+    var items = state.day.items.slice();
+    items.splice(i, 1);
+    state.board.updated = Date.now();
+    store.saveBoard(state.board);
+    commitDay({ date: state.today, items: items });
+  }
+
+  function moveTask(id, delta){
+    var list = state.board.tasks;
+    var i = list.findIndex(function(t){ return t.id === id; });
+    if (i < 0) return;
+    var sib = [];
+    list.forEach(function(t, n){ if (t.sectionId === list[i].sectionId) sib.push(n); });
+    var at = sib.indexOf(i);
+    var to = sib[at + delta];
+    if (to === undefined) return;
+    var tmp = list[i]; list[i] = list[to]; list[to] = tmp;
+    commitBoard();
+  }
+
+  function reorderTask(dragId, targetId, after){
+    var list = state.board.tasks;
+    var from = list.findIndex(function(t){ return t.id === dragId; });
+    if (from < 0 || dragId === targetId) return;
+    var moved = list.splice(from, 1)[0];
+    var to = list.findIndex(function(t){ return t.id === targetId; });
+    if (to < 0){ list.splice(from, 0, moved); return; }
+    moved.sectionId = list[to].sectionId;
+    list.splice(after ? to + 1 : to, 0, moved);
+    commitBoard();
+  }
+
+  function retargetTask(id, sectionId){
+    var list = state.board.tasks;
+    var i = list.findIndex(function(t){ return t.id === id; });
+    if (i < 0) return;
+    var task = list.splice(i, 1)[0];
+    task.sectionId = sectionId;
+    var last = -1;
+    for (var n = list.length - 1; n >= 0; n--){
+      if (list[n].sectionId === sectionId){ last = n; break; }
+    }
+    list.splice(last + 1, 0, task);
+    commitBoard();
+  }
+
+  function deleteTask(id){
+    state.board.tasks = state.board.tasks.filter(function(t){ return t.id !== id; });
+    commitBoard();
+  }
+
+  function addSection(){
+    var sec = {
+      id: uid(),
+      name: "New Section",
+      color: PALETTE[state.board.sections.length % PALETTE.length]
+    };
+    state.board.sections.push(sec);
+    state.editing = { kind: "section", id: sec.id };
+    state.focus = "edit-" + sec.id;
+    commitBoard();
+  }
+
+  function moveSection(id, delta){
+    var list = state.board.sections;
+    var i = list.findIndex(function(s){ return s.id === id; });
+    var to = i + delta;
+    if (i < 0 || to < 0 || to >= list.length) return;
+    var tmp = list[i]; list[i] = list[to]; list[to] = tmp;
+    commitBoard();
+  }
+
+  function deleteSection(id){
+    var list = state.board.sections;
+    if (list.length <= 1){ showToast("Keep at least one section"); return; }
+    var i = list.findIndex(function(s){ return s.id === id; });
+    list.splice(i, 1);
+    var fallback = list[Math.max(0, i - 1)].id;
+    state.board.tasks.forEach(function(t){
+      if (t.sectionId === id) t.sectionId = fallback;
+    });
+    commitBoard();
+  }
+
+  /* ============================ rendering ============================ */
+  function ageBadge(task){
+    var n = ageOf(task);
+    if (n < 1) return "";
+    var cls = n >= 7 ? "hot" : (n >= 3 ? "warm" : "");
+    var title = "On the list since " + fmtShort(task.created) + " · " + plural(n, "day", "days");
+    return '<span class="age ' + cls + '" title="' + esc(title) + '">' + n + 'd</span>';
+  }
+
+  function taskRow(task){
+    var editing = state.editing && state.editing.kind === "task" && state.editing.id === task.id;
+    var open = state.menu && state.menu.kind === "task" && state.menu.id === task.id;
+    var body = editing
+      ? '<input class="textedit" id="edit-' + esc(task.id) + '" data-id="' + esc(task.id) +
+        '" value="' + esc(task.text) + '" aria-label="Edit task">'
+      : '<div class="text" data-act="edit-task" data-id="' + esc(task.id) + '">' + esc(task.text) + '</div>';
+
+    return '' +
+      '<div class="row menuwrap" data-row="' + esc(task.id) + '" draggable="' + (editing ? "false" : "true") + '">' +
+        '<div class="box"><button data-act="complete" data-id="' + esc(task.id) + '" aria-label="Mark done: ' + esc(task.text) + '">' + ICON.check + '</button></div>' +
+        body +
+        '<div class="meta">' +
+          ageBadge(task) +
+          '<span class="grip" aria-hidden="true">' + ICON.grip + '</span>' +
+          '<button class="dots' + (open ? " open" : "") + '" data-act="menu" data-kind="task" data-id="' + esc(task.id) + '" aria-label="Task options" aria-expanded="' + (open ? "true" : "false") + '">' + ICON.dots + '</button>' +
+        '</div>' +
+        (open ? taskMenu(task) : "") +
+      '</div>';
+  }
+
+  function taskMenu(task){
+    if (state.confirm === task.id){
+      return '<div class="menu">' +
+        '<div class="lbl">Delete this task?</div>' +
+        '<button class="danger" data-act="delete-task" data-id="' + esc(task.id) + '">Yes, delete it</button>' +
+        '<button data-act="close-menu">Keep it</button>' +
+      '</div>';
+    }
+    var others = state.board.sections.filter(function(s){ return s.id !== task.sectionId; });
+    var moves = others.map(function(s){
+      return '<button data-act="retarget" data-id="' + esc(task.id) + '" data-section="' + esc(s.id) + '">' +
+        '<span class="swatch" style="background:' + esc(s.color) + '"></span>' + esc(s.name) + '</button>';
+    }).join("");
+    return '<div class="menu">' +
+      '<button data-act="edit-task" data-id="' + esc(task.id) + '">Edit text</button>' +
+      '<button data-act="move-task" data-id="' + esc(task.id) + '" data-delta="-1">Move up</button>' +
+      '<button data-act="move-task" data-id="' + esc(task.id) + '" data-delta="1">Move down</button>' +
+      (moves ? '<div class="sep"></div><div class="lbl">Move to</div>' + moves : "") +
+      '<div class="sep"></div>' +
+      '<button class="danger" data-act="ask-delete" data-id="' + esc(task.id) + '">Delete</button>' +
+    '</div>';
+  }
+
+  function doneRow(item){
+    return '' +
+      '<div class="row done">' +
+        '<div class="box"><button data-act="reopen" data-id="' + esc(item.id) + '" aria-label="Reopen: ' + esc(item.text) + '">' + ICON.check + '</button></div>' +
+        '<div class="text">' + esc(item.text) + '</div>' +
+        '<div class="meta"><button class="undo" data-act="reopen" data-id="' + esc(item.id) + '" aria-label="Put back on the sheet" title="Put back on the sheet">' + ICON.undo + '</button></div>' +
+      '</div>';
+  }
+
+  function sectionMenu(sec){
+    if (state.confirm === sec.id){
+      var n = tasksOf(sec.id).length;
+      return '<div class="menu">' +
+        '<div class="lbl">Delete this section?</div>' +
+        (n ? '<div class="lbl" style="letter-spacing:0;text-transform:none;font-family:var(--font-body);font-size:12px">' +
+              plural(n, "open task moves", "open tasks move") + ' to the section above.</div>' : "") +
+        '<button class="danger" data-act="delete-section" data-id="' + esc(sec.id) + '">Yes, delete it</button>' +
+        '<button data-act="close-menu">Keep it</button>' +
+      '</div>';
+    }
+    var swatches = PALETTE.map(function(c){
+      return '<button data-act="recolor" data-id="' + esc(sec.id) + '" data-color="' + esc(c) + '" aria-label="Use this colour">' +
+        '<span class="swatch" style="background:' + esc(c) + '"></span>' +
+        (c === sec.color ? "Current" : "&nbsp;") + '</button>';
+    }).join("");
+    return '<div class="menu">' +
+      '<button data-act="edit-section" data-id="' + esc(sec.id) + '">Rename</button>' +
+      '<button data-act="move-section" data-id="' + esc(sec.id) + '" data-delta="-1">Move up</button>' +
+      '<button data-act="move-section" data-id="' + esc(sec.id) + '" data-delta="1">Move down</button>' +
+      '<div class="sep"></div><div class="lbl">Colour</div>' + swatches +
+      '<div class="sep"></div>' +
+      '<button class="danger" data-act="ask-delete" data-id="' + esc(sec.id) + '">Delete section</button>' +
+    '</div>';
+  }
+
+  function sectionBlock(sec){
+    var open = tasksOf(sec.id);
+    var done = doneOf(sec.id);
+    var editing = state.editing && state.editing.kind === "section" && state.editing.id === sec.id;
+    var menuOpen = state.menu && state.menu.kind === "section" && state.menu.id === sec.id;
+    var label = editing
+      ? '<input class="secedit" id="edit-' + esc(sec.id) + '" data-id="' + esc(sec.id) +
+        '" value="' + esc(sec.name) + '" aria-label="Section name">'
+      : '<div class="secname" data-act="edit-section" data-id="' + esc(sec.id) + '">' + esc(sec.name) + '</div>';
+
+    var count = open.length
+      ? open.length + (done.length ? " open · " + done.length + " done" : " open")
+      : (done.length ? done.length + " done" : "clear");
+
+    return '<div class="section">' +
+      '<div class="sechead menuwrap">' +
+        '<span class="dot" style="background:' + esc(sec.color) + '"></span>' +
+        label +
+        '<span class="seccount">' + esc(count) + '</span>' +
+        '<button class="dots' + (menuOpen ? " open" : "") + '" data-act="menu" data-kind="section" data-id="' + esc(sec.id) + '" aria-label="Section options" aria-expanded="' + (menuOpen ? "true" : "false") + '">' + ICON.dots + '</button>' +
+        (menuOpen ? sectionMenu(sec) : "") +
+      '</div>' +
+      '<div class="rows" data-section="' + esc(sec.id) + '">' +
+        open.map(taskRow).join("") +
+        (!open.length && !done.length ? '<div class="empty">Nothing here yet.</div>' : "") +
+        (done.length ? '<div class="donehead">Done today</div>' + done.map(doneRow).join("") : "") +
+      '</div>' +
+      '<div class="addline">' +
+        '<span class="addplus" aria-hidden="true">+</span>' +
+        '<input id="add-' + esc(sec.id) + '" data-section="' + esc(sec.id) + '" placeholder="Add a task…" aria-label="Add a task to ' + esc(sec.name) + '" autocomplete="off">' +
+      '</div>' +
+    '</div>';
+  }
+
+  function todayView(){
+    return '<div class="sheet">' +
+      state.board.sections.map(sectionBlock).join("") +
+      '<button class="addsec" data-act="add-section"><span aria-hidden="true">+</span> Add a section</button>' +
+    '</div>';
+  }
+
+  function logView(){
+    if (state.logDays === null) return '<div class="blank">Reading the log…</div>';
+    var days = state.logDays.filter(function(d){ return d && d.items && d.items.length; });
+    if (!days.length) return '<div class="blank">Nothing logged yet. Check something off and it shows up here.</div>';
+
+    return days.map(function(day){
+      var groups = [];
+      day.items.forEach(function(it){
+        var g = groups.find(function(x){ return x.name === it.sectionName; });
+        if (!g){ g = { name: it.sectionName, color: it.color, items: [] }; groups.push(g); }
+        g.items.push(it);
+      });
+      return '<div class="logday">' +
+        '<div class="logdate"><h3>' + esc(fmtLong(day.date)) + '</h3>' +
+          '<span class="n">' + esc(plural(day.items.length, "done", "done")) + '</span></div>' +
+        groups.map(function(g){
+          return '<div class="loggroup">' +
+            '<div class="g"><span class="swatch dot" style="background:' + esc(g.color || "#888") + '"></span>' + esc(g.name) + '</div>' +
+            g.items.map(function(it){
+              var carried = it.age > 0
+                ? '<span class="carried">carried ' + it.age + 'd</span>' : "";
+              return '<div class="logitem"><span class="ck">×</span><span>' + esc(it.text) + '</span>' + carried + '</div>';
+            }).join("") +
+          '</div>';
+        }).join("") +
+      '</div>';
+    }).join("");
+  }
+
+  function settingsPanel(){
+    var s = state.board.settings || { dayStart: 4 };
+    var hours = [0,1,2,3,4,5,6,7,8].map(function(h){
+      var lbl = h === 0 ? "Midnight" : (h < 12 ? h + ":00 AM" : h + ":00");
+      return '<option value="' + h + '"' + (h === s.dayStart ? " selected" : "") + '>' + esc(lbl) + '</option>';
+    }).join("");
+    return '<div class="panel">' +
+      '<h2>Settings</h2>' +
+      '<div class="field">' +
+        '<div><div class="k">A new day starts at</div>' +
+        '<div class="h">Work past midnight still counts as the day before.</div></div>' +
+        '<select id="daystart" data-act="daystart" aria-label="Hour a new day starts">' + hours + '</select>' +
+      '</div>' +
+      '<div class="field">' +
+        '<div><div class="k">Where this is stored</div>' +
+        '<div class="h">' + (store.kind === "cloud"
+            ? "Synced to your Claude account — same sheet on every device."
+            : "This browser only. Open the published link to sync across devices.") + '</div></div>' +
+        '<span class="val">' + (store.kind === "cloud" ? "Synced" : "This device") + '</span>' +
+      '</div>' +
+      '<div class="field">' +
+        '<div><div class="k">Export the log</div>' +
+        '<div class="h">Everything finished, newest first, as plain text.</div></div>' +
+        '<button class="btn" data-act="export-log">Copy log</button>' +
+      '</div>' +
+    '</div>';
+  }
+
+  function copyPanel(){
+    return '<div class="panel">' +
+      '<h2>Copy — select the text below</h2>' +
+      '<textarea class="copybox" id="copybox" readonly>' + esc(state.copyText) + '</textarea>' +
+      '<div style="margin-top:10px"><button class="btn" data-act="close-panel">Done</button></div>' +
+    '</div>';
+  }
+
+  function render(){
+    if (!state.board){
+      document.getElementById("main").innerHTML = '<div class="blank">Opening your sheet…</div>';
+      return;
+    }
+    var c = counts();
+    document.getElementById("dateline").textContent = fmtLong(state.today);
+    document.getElementById("tally").innerHTML =
+      '<span><b>' + c.open + '</b> open</span>' +
+      '<span><b>' + c.done + '</b> done</span>' +
+      (c.carried ? '<span class="' + (c.stale ? "warn" : "") + '"><b>' + c.carried + '</b> carried over</span>' : "");
+
+    document.getElementById("tab-today").setAttribute("aria-selected", state.view === "today" ? "true" : "false");
+    document.getElementById("tab-log").setAttribute("aria-selected", state.view === "log" ? "true" : "false");
+
+    var html = state.view === "today" ? todayView() : logView();
+    if (state.panel === "settings") html += settingsPanel();
+    if (state.panel === "copy") html += copyPanel();
+    document.getElementById("main").innerHTML = html;
+
+    // restore the drafts a re-render would otherwise wipe
+    state.board.sections.forEach(function(sec){
+      var el = document.getElementById("add-" + sec.id);
+      if (el) el.value = state.drafts[sec.id] || "";
+    });
+
+    if (!state.focus && state.editing) state.focus = "edit-" + state.editing.id;
+    if (state.focus){
+      var f = document.getElementById(state.focus);
+      state.focus = null;
+      if (f){
+        f.focus();
+        if (f.setSelectionRange && f.value) {
+          try { f.setSelectionRange(f.value.length, f.value.length); } catch(e){}
+        }
+      }
+    }
+  }
+
+  var toastTimer = null;
+  function showToast(msg){
+    var el = document.getElementById("toast");
+    if (!el){
+      el = document.createElement("div");
+      el.className = "toast"; el.id = "toast"; el.setAttribute("role","status");
+      document.body.appendChild(el);
+    }
+    el.textContent = msg;
+    el.hidden = false;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ el.hidden = true; }, 2600);
+  }
+
+  /* ============================ text export ============================ */
+  function todayAsText(){
+    var lines = ["Daily Sheet — " + fmtLong(state.today), ""];
+    state.board.sections.forEach(function(sec){
+      var open = tasksOf(sec.id), done = doneOf(sec.id);
+      if (!open.length && !done.length) return;
+      lines.push(sec.name.toUpperCase());
+      open.forEach(function(t){
+        var n = ageOf(t);
+        lines.push("  [ ] " + t.text + (n ? "   (" + n + "d)" : ""));
+      });
+      done.forEach(function(d){ lines.push("  [x] " + d.text); });
+      lines.push("");
+    });
+    var c = counts();
+    lines.push("— " + c.done + " done, " + c.open + " open, " + c.carried + " carried over");
+    return lines.join("\n");
+  }
+
+  function logAsText(days){
+    var lines = ["Daily Sheet — completed log", ""];
+    days.forEach(function(day){
+      if (!day || !day.items || !day.items.length) return;
+      lines.push(fmtLong(day.date) + "  (" + day.items.length + ")");
+      day.items.forEach(function(it){
+        lines.push("  × [" + it.sectionName + "] " + it.text + (it.age ? "   carried " + it.age + "d" : ""));
+      });
+      lines.push("");
+    });
+    return lines.join("\n");
+  }
+
+  function copyText(text){
+    state.copyText = text;
+    var done = function(){ showToast("Copied"); };
+    var fallback = function(){ state.panel = "copy"; render(); };
+    if (navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(done, fallback);
+    } else {
+      fallback();
+    }
+  }
+
+  /* ============================ events ============================ */
+  function closeTransient(){
+    state.menu = null;
+    state.confirm = null;
+  }
+
+  document.addEventListener("click", function(e){
+    var el = e.target && e.target.closest ? e.target.closest("[data-act]") : null;
+    if (!el){
+      if (state.menu || state.confirm){ closeTransient(); render(); }
+      return;
+    }
+    var act = el.getAttribute("data-act");
+    var id = el.getAttribute("data-id");
+
+    switch (act){
+      case "view":
+        state.view = el.getAttribute("data-view");
+        state.panel = null;
+        closeTransient();
+        if (state.view === "log") loadLog();
+        render();
+        break;
+
+      case "settings":
+        state.panel = state.panel === "settings" ? null : "settings";
+        closeTransient(); render();
+        break;
+
+      case "close-panel":
+        state.panel = null; render();
+        break;
+
+      case "print":
+        window.print();
+        break;
+
+      case "copy":
+        copyText(todayAsText());
+        break;
+
+      case "export-log":
+        store.listDays(400).then(function(days){ copyText(logAsText(days)); });
+        break;
+
+      case "complete":
+        closeTransient(); completeTask(id);
+        break;
+
+      case "reopen":
+        closeTransient(); reopenTask(id);
+        break;
+
+      case "menu": {
+        var kind = el.getAttribute("data-kind");
+        var same = state.menu && state.menu.id === id;
+        state.confirm = null;
+        state.menu = same ? null : { kind: kind, id: id };
+        render();
+        break;
+      }
+
+      case "close-menu":
+        closeTransient(); render();
+        break;
+
+      case "edit-task":
+        closeTransient();
+        state.editing = { kind: "task", id: id };
+        state.focus = "edit-" + id;
+        render();
+        break;
+
+      case "edit-section":
+        closeTransient();
+        state.editing = { kind: "section", id: id };
+        state.focus = "edit-" + id;
+        render();
+        break;
+
+      case "move-task":
+        closeTransient(); moveTask(id, +el.getAttribute("data-delta"));
+        break;
+
+      case "retarget":
+        closeTransient(); retargetTask(id, el.getAttribute("data-section"));
+        break;
+
+      case "ask-delete":
+        state.confirm = id; render();
+        break;
+
+      case "delete-task":
+        closeTransient(); deleteTask(id);
+        break;
+
+      case "move-section":
+        closeTransient(); moveSection(id, +el.getAttribute("data-delta"));
+        break;
+
+      case "delete-section":
+        closeTransient(); deleteSection(id);
+        break;
+
+      case "recolor": {
+        var sec = state.board.sections.find(function(s){ return s.id === id; });
+        if (sec) sec.color = el.getAttribute("data-color");
+        closeTransient(); commitBoard();
+        break;
+      }
+
+      case "add-section":
+        closeTransient(); addSection();
+        break;
+    }
+  });
+
+  document.addEventListener("keydown", function(e){
+    var t = e.target;
+
+    if (e.key === "Escape"){
+      if (state.editing){ state.editing = null; render(); return; }
+      if (state.menu || state.confirm){ closeTransient(); render(); return; }
+    }
+
+    if (e.key !== "Enter") return;
+
+    if (t.matches && t.matches(".addline input")){
+      e.preventDefault();
+      addTask(t.getAttribute("data-section"), t.value);
+      return;
+    }
+    if (t.matches && t.matches(".textedit")){
+      e.preventDefault();
+      saveEdit(t);
+      return;
+    }
+    if (t.matches && t.matches(".secedit")){
+      e.preventDefault();
+      saveEdit(t);
+    }
+  });
+
+  function saveEdit(input){
+    var id = input.getAttribute("data-id");
+    var value = input.value.trim();
+    state.editing = null;
+    if (input.classList.contains("secedit")){
+      var sec = state.board.sections.find(function(s){ return s.id === id; });
+      if (sec && value) sec.name = value;
+      else { render(); return; }
+    } else {
+      var task = state.board.tasks.find(function(t){ return t.id === id; });
+      if (!task){ render(); return; }
+      if (!value){ deleteTask(id); return; }
+      task.text = value;
+    }
+    commitBoard();
+  }
+
+  document.addEventListener("blur", function(e){
+    var t = e.target;
+    if (t && t.matches && (t.matches(".textedit") || t.matches(".secedit"))){
+      if (state.editing) saveEdit(t);
+    }
+  }, true);
+
+  document.addEventListener("input", function(e){
+    var t = e.target;
+    if (t.matches && t.matches(".addline input")){
+      state.drafts[t.getAttribute("data-section")] = t.value;
+    }
+  });
+
+  document.addEventListener("change", function(e){
+    if (e.target.id === "daystart"){
+      state.board.settings = state.board.settings || {};
+      state.board.settings.dayStart = +e.target.value;
+      checkDayRollover();
+      commitBoard();
+    }
+  });
+
+  /* drag to reorder (pointer devices; the ⋯ menu covers touch) */
+  document.addEventListener("dragstart", function(e){
+    var row = e.target.closest && e.target.closest(".row[data-row]");
+    if (!row) return;
+    state.dragId = row.getAttribute("data-row");
+    row.classList.add("dragging");
+    if (e.dataTransfer){
+      e.dataTransfer.effectAllowed = "move";
+      try { e.dataTransfer.setData("text/plain", state.dragId); } catch(err){}
+    }
+  });
+  document.addEventListener("dragover", function(e){
+    if (!state.dragId) return;
+    var row = e.target.closest && e.target.closest(".row[data-row]");
+    if (!row) return;
+    e.preventDefault();
+    var box = row.getBoundingClientRect();
+    var after = (e.clientY - box.top) > box.height / 2;
+    document.querySelectorAll(".dropbefore,.dropafter").forEach(function(n){
+      n.classList.remove("dropbefore","dropafter");
+    });
+    row.classList.add(after ? "dropafter" : "dropbefore");
+  });
+  document.addEventListener("drop", function(e){
+    if (!state.dragId) return;
+    var row = e.target.closest && e.target.closest(".row[data-row]");
+    if (!row) return;
+    e.preventDefault();
+    var box = row.getBoundingClientRect();
+    var after = (e.clientY - box.top) > box.height / 2;
+    var target = row.getAttribute("data-row");
+    var drag = state.dragId;
+    state.dragId = null;
+    reorderTask(drag, target, after);
+  });
+  document.addEventListener("dragend", function(){
+    state.dragId = null;
+    document.querySelectorAll(".dragging,.dropbefore,.dropafter").forEach(function(n){
+      n.classList.remove("dragging","dropbefore","dropafter");
+    });
+  });
+
+  /* ============================ day rollover ============================ */
+  function checkDayRollover(){
+    var startHour = (state.board && state.board.settings && state.board.settings.dayStart) || 0;
+    var key = dayKey(Date.now(), startHour);
+    if (key === state.today) return false;
+    state.today = key;
+    state.day = null;
+    if (unsubDay) { unsubDay(); unsubDay = null; }
+    unsubDay = store.watchDay(state.today, function(d){
+      state.day = d ? clone(d) : null;
+      render();
+    });
+    return true;
+  }
+
+  function loadLog(){
+    state.logDays = null;
+    store.listDays(90).then(function(days){
+      state.logDays = days;
+      render();
+    });
+  }
+
+  /* ============================ boot ============================ */
+  function start(db){
+    store = db ? cloudStore(db) : localStore();
+
+    store.watchBoard(function(board){
+      if (!board){
+        if (state.board) return;            // an empty snapshot after a local edit
+        state.board = seedBoard();
+        store.saveBoard(state.board);
+      } else {
+        // don't let a slow echo of our own write clobber newer local edits
+        if (state.board && board.updated && state.board.updated &&
+            board.updated < state.board.updated) return;
+        state.board = clone(board);
+      }
+      if (!state.board.sections.length){
+        state.board.sections = seedBoard().sections;
+      }
+      checkDayRollover();
+      render();
+    });
+
+    state.today = dayKey(Date.now(), 4);
+    unsubDay = store.watchDay(state.today, function(d){
+      state.day = d ? clone(d) : null;
+      render();
+    });
+
+    setInterval(function(){
+      if (state.board && checkDayRollover()) render();
+    }, 30000);
+
+    render();
+  }
+
+  render();
+  var use = window.claude && window.claude.use;
+  if (use){
+    window.claude.use("db").then(function(db){ start(db); }, function(){ start(null); });
+  } else {
+    start(null);
+  }
+})();
+</script>
