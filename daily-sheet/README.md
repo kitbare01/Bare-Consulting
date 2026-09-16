@@ -13,10 +13,10 @@ sheet, a checkbox per task, and whatever isn't finished carries to tomorrow.
   here, the `▸` on each line. Marked lines carry a rail down the left
   edge on the full sheet, and the **Today** tab shows only them. A line
   still marked days later says so, in amber and then red.
-- **Three kinds of line** — a task with a checkbox, a task marked *in prog*
-  or *waiting*, and a note that carries no checkbox at all, for the standing
-  context that sits on a paper sheet without ever being "done". Any line can
-  be a sub-line under the one above it.
+- **Every line is checkable**, and can carry an *in prog* or *waiting*
+  status. A line can also be demoted to a note, which drops its checkbox and
+  keeps it out of the tally, for reference text that is never "done". Any
+  line can be a sub-line under the one above it.
 - **Automatic carry-over** — there is no "start a new day" step. Open tasks
   stay open, and on a new day they wear a day count (`3d`) that turns amber
   at three days and red at seven. That count is the only thing the paper
@@ -33,6 +33,14 @@ sheet, a checkbox per task, and whatever isn't finished carries to tomorrow.
   when typing a single line into a section.
 - **Copy and print** — copy today's sheet (or the whole log) as plain text,
   or print the sheet with the interface stripped out.
+
+## Colour
+
+UCLA blue (`#2774AE`, and `#8BB8E8` on dark) carries the accent and the
+marked-for-today rail. Gold escalates — a status chip, an ageing badge, a
+mark a day or two old — and a single red is held back for anything a week
+stale. Semantic colours stay separate from the accent: done is green, and
+section dots are a categorical set used only to tell clients apart.
 
 ## Files
 
