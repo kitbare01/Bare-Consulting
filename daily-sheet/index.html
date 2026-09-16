@@ -203,6 +203,30 @@ input{font:inherit;color:inherit}
 .addline input::placeholder{color:var(--ink-3)}
 .addline input:focus{outline:none;border-bottom-color:var(--accent)}
 
+/* line kinds: notes carry no checkbox, sub-lines sit indented */
+.row.note .box{visibility:hidden}
+.row.note .text{color:var(--ink-2);font-size:13.5px}
+.row.ind .box{margin-left:24px}
+.row.wip .box button{border-color:var(--accent)}
+.row.wip .box button::after{
+  content:"";width:11px;height:1.8px;border-radius:2px;
+  background:var(--accent);transform:rotate(-45deg);
+}
+.chip{
+  font-family:var(--font-mono);font-size:10px;letter-spacing:.03em;
+  padding:2px 6px;border-radius:3px;white-space:nowrap;
+  background:var(--accent-soft);color:var(--accent);
+}
+.chip.waiting{background:var(--amber-soft);color:var(--amber)}
+.sectoggle{
+  width:15px;height:15px;display:grid;place-items:center;
+  color:var(--ink-3);flex-shrink:0;margin-left:-3px;
+}
+.sectoggle svg{width:9px;height:9px;fill:currentColor;transition:transform .13s}
+.section.closed .sectoggle svg{transform:rotate(-90deg)}
+@media (prefers-reduced-motion:reduce){.sectoggle svg{transition:none}}
+.section.closed .sechead{padding-bottom:14px}
+
 /* menus */
 .menu{
   position:absolute;right:8px;top:calc(100% - 4px);z-index:20;
@@ -288,6 +312,11 @@ input{font:inherit;color:inherit}
   border:1px solid var(--rule);background:var(--sheet-2);color:var(--ink);
 }
 .btn:hover{border-color:var(--ink-3)}
+.hint{font-size:12.5px;color:var(--ink-2);margin:0 0 8px;line-height:1.55}
+.hint code{font-family:var(--font-mono);font-size:11.5px;background:var(--sheet-2);
+  border:1px solid var(--rule-2);border-radius:3px;padding:1px 4px}
+.hint.caution{color:var(--pencil)}
+.prow{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
 .copybox{width:100%;min-height:210px;margin-top:10px;font-family:var(--font-mono);font-size:12px;
   background:var(--sheet-2);border:1px solid var(--rule);border-radius:5px;padding:9px;color:var(--ink);resize:vertical}
 .toast{
@@ -298,6 +327,7 @@ input{font:inherit;color:inherit}
 }
 
 @media (max-width:460px){
+  .row.ind .box{margin-left:18px}
   .dateline{font-size:19px}
   .masthead-in{padding-block:11px 9px}
   .tab{padding:5px 10px}
@@ -349,6 +379,7 @@ input{font:inherit;color:inherit}
     check:'<svg viewBox="0 0 24 24"><path d="M4 12.5 9.5 18 20 6.5"/></svg>',
     dots :'<svg viewBox="0 0 24 24"><circle cx="12" cy="5.5" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="12" cy="18.5" r="1.7"/></svg>',
     grip :'<svg viewBox="0 0 10 14"><circle cx="2" cy="2" r="1.3"/><circle cx="8" cy="2" r="1.3"/><circle cx="2" cy="7" r="1.3"/><circle cx="8" cy="7" r="1.3"/><circle cx="2" cy="12" r="1.3"/><circle cx="8" cy="12" r="1.3"/></svg>',
+    caret:'<svg viewBox="0 0 10 10"><path d="M1 3h8L5 8z"/></svg>',
     undo :'<svg viewBox="0 0 24 24"><path d="M3 10h11a5 5 0 0 1 0 10h-3"/><path d="M7 6 3 10l4 4"/></svg>'
   };
 
@@ -389,6 +420,25 @@ input{font:inherit;color:inherit}
     return keyToDate(k).toLocaleDateString(undefined,{month:"short", day:"numeric"});
   }
   function plural(n, one, many){ return n + " " + (n === 1 ? one : many); }
+
+  /* One typed line -> one sheet line. The prefixes mirror the marks already
+     made on paper: a dash for a note that carries no box, a slash for
+     something under way, an x for something already finished, and leading
+     whitespace for a sub-line. */
+  function parseLine(raw){
+    var indent = /^(\s\s|\t)/.test(raw) ? 1 : 0;
+    var text = String(raw).replace(/^\s+/, "");
+    var kind = "task", status = "", done = false;
+    var m = text.match(/^([-*\u2013\u2014\/x\u00d7\u2713])\s+/i);
+    if (m){
+      var c = m[1].toLowerCase();
+      if (c === "-" || c === "*" || c === "\u2013" || c === "\u2014") kind = "note";
+      else if (c === "/") status = "wip";
+      else done = true;
+      text = text.slice(m[0].length);
+    }
+    return { text: text.trim(), kind: kind, status: status, indent: indent, done: done };
+  }
 
   /* ============================ storage ============================ */
   /* Two backends behind one interface: the artifact's shared store when
@@ -490,30 +540,33 @@ input{font:inherit;color:inherit}
     menu: null,         // {kind:"task"|"section", id}
     confirm: null,      // id pending delete confirmation
     drafts: {},         // sectionId -> in-progress text
+    importText: "",     // draft in the import box
     focus: null,        // element id to restore focus to
     dragId: null
   };
 
   function seedBoard(){
     var today = state.today;
-    var secs = [
-      { id: uid(), name: "Client Work",  color: PALETTE[0] },
-      { id: uid(), name: "Work — Admin", color: PALETTE[1] },
-      { id: uid(), name: "Personal",     color: PALETTE[2] }
-    ];
-    function t(i, text){
-      return { id: uid(), sectionId: secs[i].id, text: text, created: today };
+    var names = ["CI", "a.k.a.", "Sunrun", "Broadcom", "HL", "GD", "Qualcomm", "Admin"];
+    var secs = names.map(function(n, i){
+      return { id: uid(), name: n, color: PALETTE[i % PALETTE.length], collapsed: false };
+    });
+    function t(i, text, kind, status, indent){
+      return {
+        id: uid(), sectionId: secs[i].id, text: text, created: today,
+        kind: kind || "task", status: status || "", indent: indent || 0
+      };
     }
     return {
-      v: 1,
+      v: 2,
       settings: { dayStart: 4 },
       sections: secs,
       tasks: [
-        t(0, "Rename these sections — one per client you're tracking"),
-        t(0, "Add a task: type on the line under a section, press Enter"),
-        t(1, "Check this one off — it drops into the Log, not the void"),
-        t(1, "Leave this one open — it rolls to tomorrow on its own, with a day count"),
-        t(2, "Drag a task by its handle, or use ⋯ to move it to another section")
+        t(7, "Settings \u2192 Import a sheet: paste your whole list in at once"),
+        t(7, "Type on the line under a section and press Enter to add"),
+        t(7, "Start a line with / to mark it under way", null, "wip"),
+        t(7, "start a line with - for a note, which gets no checkbox", "note"),
+        t(7, "two leading spaces make a sub-line", "note", null, 1)
       ]
     };
   }
@@ -542,25 +595,40 @@ input{font:inherit;color:inherit}
     return n > 0 ? n : 0;
   }
   function counts(){
-    var open = state.board.tasks.length;
-    var done = ((state.day && state.day.items) || []).length;
-    var carried = state.board.tasks.filter(function(t){ return ageOf(t) > 0; }).length;
-    var stale = state.board.tasks.filter(function(t){ return ageOf(t) >= 7; }).length;
-    return { open: open, done: done, carried: carried, stale: stale };
+    var work = state.board.tasks.filter(function(t){ return t.kind !== "note"; });
+    return {
+      open: work.length,
+      done: ((state.day && state.day.items) || []).length,
+      wip: work.filter(function(t){ return t.status === "wip"; }).length,
+      carried: work.filter(function(t){ return ageOf(t) > 0; }).length,
+      stale: work.filter(function(t){ return ageOf(t) >= 7; }).length
+    };
   }
 
   /* ============================ actions ============================ */
-  function addTask(sectionId, text){
-    text = (text || "").trim();
-    if (!text) return;
+  function addTask(sectionId, raw){
+    var p = parseLine(raw || "");
+    if (!p.text) return;
     var idx = -1;
     for (var i = state.board.tasks.length - 1; i >= 0; i--){
       if (state.board.tasks[i].sectionId === sectionId){ idx = i; break; }
     }
-    var task = { id: uid(), sectionId: sectionId, text: text, created: state.today };
+    var task = {
+      id: uid(), sectionId: sectionId, text: p.text, created: state.today,
+      kind: p.kind, status: p.status, indent: p.indent
+    };
     state.board.tasks.splice(idx + 1, 0, task);
     state.drafts[sectionId] = "";
     state.focus = "add-" + sectionId;
+    if (p.done && p.kind === "task"){ completeTask(task.id); return; }
+    commitBoard();
+  }
+
+  function setField(id, field, value){
+    var task = state.board.tasks.find(function(t){ return t.id === id; });
+    if (!task) return;
+    task[field] = value;
+    if (field === "kind" && value === "note") task.status = "";
     commitBoard();
   }
 
@@ -681,6 +749,7 @@ input{font:inherit;color:inherit}
 
   /* ============================ rendering ============================ */
   function ageBadge(task){
+    if (task.kind === "note") return "";
     var n = ageOf(task);
     if (n < 1) return "";
     var cls = n >= 7 ? "hot" : (n >= 3 ? "warm" : "");
@@ -689,23 +758,40 @@ input{font:inherit;color:inherit}
   }
 
   function taskRow(task){
+    var isNote = task.kind === "note";
     var editing = state.editing && state.editing.kind === "task" && state.editing.id === task.id;
-    var open = state.menu && state.menu.kind === "task" && state.menu.id === task.id;
+    var menuOpen = state.menu && state.menu.kind === "task" && state.menu.id === task.id;
+
+    var cls = "row menuwrap" +
+      (isNote ? " note" : "") +
+      (task.indent ? " ind" : "") +
+      (task.status === "wip" ? " wip" : "");
+
     var body = editing
       ? '<input class="textedit" id="edit-' + esc(task.id) + '" data-id="' + esc(task.id) +
-        '" value="' + esc(task.text) + '" aria-label="Edit task">'
+        '" value="' + esc(task.text) + '" aria-label="Edit line">'
       : '<div class="text" data-act="edit-task" data-id="' + esc(task.id) + '">' + esc(task.text) + '</div>';
 
+    var box = isNote
+      ? '<div class="box" aria-hidden="true"></div>'
+      : '<div class="box"><button data-act="complete" data-id="' + esc(task.id) +
+        '" aria-label="Mark done: ' + esc(task.text) + '">' + ICON.check + '</button></div>';
+
+    var chip = task.status === "waiting"
+      ? '<span class="chip waiting">waiting</span>'
+      : (task.status === "wip" ? '<span class="chip">in prog</span>' : "");
+
     return '' +
-      '<div class="row menuwrap" data-row="' + esc(task.id) + '" draggable="' + (editing ? "false" : "true") + '">' +
-        '<div class="box"><button data-act="complete" data-id="' + esc(task.id) + '" aria-label="Mark done: ' + esc(task.text) + '">' + ICON.check + '</button></div>' +
+      '<div class="' + cls + '" data-row="' + esc(task.id) + '" draggable="' + (editing ? "false" : "true") + '">' +
+        box +
         body +
         '<div class="meta">' +
+          chip +
           ageBadge(task) +
           '<span class="grip" aria-hidden="true">' + ICON.grip + '</span>' +
-          '<button class="dots' + (open ? " open" : "") + '" data-act="menu" data-kind="task" data-id="' + esc(task.id) + '" aria-label="Task options" aria-expanded="' + (open ? "true" : "false") + '">' + ICON.dots + '</button>' +
+          '<button class="dots' + (menuOpen ? " open" : "") + '" data-act="menu" data-kind="task" data-id="' + esc(task.id) + '" aria-label="Line options" aria-expanded="' + (menuOpen ? "true" : "false") + '">' + ICON.dots + '</button>' +
         '</div>' +
-        (open ? taskMenu(task) : "") +
+        (menuOpen ? taskMenu(task) : "") +
       '</div>';
   }
 
@@ -722,8 +808,21 @@ input{font:inherit;color:inherit}
       return '<button data-act="retarget" data-id="' + esc(task.id) + '" data-section="' + esc(s.id) + '">' +
         '<span class="swatch" style="background:' + esc(s.color) + '"></span>' + esc(s.name) + '</button>';
     }).join("");
+    var isNote = task.kind === "note";
+    var statusRow = isNote ? "" : (
+      '<button data-act="status" data-id="' + esc(task.id) + '" data-status="' + (task.status === "wip" ? "" : "wip") + '">' +
+        (task.status === "wip" ? "Clear \u201Cin prog\u201D" : "Mark in prog") + '</button>' +
+      '<button data-act="status" data-id="' + esc(task.id) + '" data-status="' + (task.status === "waiting" ? "" : "waiting") + '">' +
+        (task.status === "waiting" ? "Clear \u201Cwaiting\u201D" : "Mark waiting") + '</button>'
+    );
     return '<div class="menu">' +
       '<button data-act="edit-task" data-id="' + esc(task.id) + '">Edit text</button>' +
+      statusRow +
+      '<button data-act="kind" data-id="' + esc(task.id) + '" data-kind="' + (isNote ? "task" : "note") + '">' +
+        (isNote ? "Turn into a task" : "Turn into a note") + '</button>' +
+      '<button data-act="indent" data-id="' + esc(task.id) + '" data-indent="' + (task.indent ? "0" : "1") + '">' +
+        (task.indent ? "Outdent" : "Make a sub-line") + '</button>' +
+      '<div class="sep"></div>' +
       '<button data-act="move-task" data-id="' + esc(task.id) + '" data-delta="-1">Move up</button>' +
       '<button data-act="move-task" data-id="' + esc(task.id) + '" data-delta="1">Move down</button>' +
       (moves ? '<div class="sep"></div><div class="lbl">Move to</div>' + moves : "") +
@@ -759,6 +858,7 @@ input{font:inherit;color:inherit}
     }).join("");
     return '<div class="menu">' +
       '<button data-act="edit-section" data-id="' + esc(sec.id) + '">Rename</button>' +
+      '<button data-act="toggle-section" data-id="' + esc(sec.id) + '">' + (sec.collapsed ? "Expand" : "Collapse") + '</button>' +
       '<button data-act="move-section" data-id="' + esc(sec.id) + '" data-delta="-1">Move up</button>' +
       '<button data-act="move-section" data-id="' + esc(sec.id) + '" data-delta="1">Move down</button>' +
       '<div class="sep"></div><div class="lbl">Colour</div>' + swatches +
@@ -768,36 +868,43 @@ input{font:inherit;color:inherit}
   }
 
   function sectionBlock(sec){
-    var open = tasksOf(sec.id);
+    var lines = tasksOf(sec.id);
+    var work = lines.filter(function(t){ return t.kind !== "note"; });
     var done = doneOf(sec.id);
+    var closed = !!sec.collapsed;
     var editing = state.editing && state.editing.kind === "section" && state.editing.id === sec.id;
     var menuOpen = state.menu && state.menu.kind === "section" && state.menu.id === sec.id;
+
     var label = editing
       ? '<input class="secedit" id="edit-' + esc(sec.id) + '" data-id="' + esc(sec.id) +
         '" value="' + esc(sec.name) + '" aria-label="Section name">'
       : '<div class="secname" data-act="edit-section" data-id="' + esc(sec.id) + '">' + esc(sec.name) + '</div>';
 
-    var count = open.length
-      ? open.length + (done.length ? " open · " + done.length + " done" : " open")
+    var count = work.length
+      ? work.length + (done.length ? " open \u00B7 " + done.length + " done" : " open")
       : (done.length ? done.length + " done" : "clear");
 
-    return '<div class="section">' +
+    var body = closed ? "" :
+      '<div class="rows" data-section="' + esc(sec.id) + '">' +
+        lines.map(taskRow).join("") +
+        (!lines.length && !done.length ? '<div class="empty">Nothing here yet.</div>' : "") +
+        (done.length ? '<div class="donehead">Done today</div>' + done.map(doneRow).join("") : "") +
+      '</div>' +
+      '<div class="addline">' +
+        '<span class="addplus" aria-hidden="true">+</span>' +
+        '<input id="add-' + esc(sec.id) + '" data-section="' + esc(sec.id) + '" placeholder="Add a task\u2026" aria-label="Add a task to ' + esc(sec.name) + '" autocomplete="off">' +
+      '</div>';
+
+    return '<div class="section' + (closed ? " closed" : "") + '">' +
       '<div class="sechead menuwrap">' +
+        '<button class="sectoggle" data-act="toggle-section" data-id="' + esc(sec.id) + '" aria-expanded="' + (closed ? "false" : "true") + '" aria-label="' + (closed ? "Expand" : "Collapse") + ' ' + esc(sec.name) + '">' + ICON.caret + '</button>' +
         '<span class="dot" style="background:' + esc(sec.color) + '"></span>' +
         label +
         '<span class="seccount">' + esc(count) + '</span>' +
         '<button class="dots' + (menuOpen ? " open" : "") + '" data-act="menu" data-kind="section" data-id="' + esc(sec.id) + '" aria-label="Section options" aria-expanded="' + (menuOpen ? "true" : "false") + '">' + ICON.dots + '</button>' +
         (menuOpen ? sectionMenu(sec) : "") +
       '</div>' +
-      '<div class="rows" data-section="' + esc(sec.id) + '">' +
-        open.map(taskRow).join("") +
-        (!open.length && !done.length ? '<div class="empty">Nothing here yet.</div>' : "") +
-        (done.length ? '<div class="donehead">Done today</div>' + done.map(doneRow).join("") : "") +
-      '</div>' +
-      '<div class="addline">' +
-        '<span class="addplus" aria-hidden="true">+</span>' +
-        '<input id="add-' + esc(sec.id) + '" data-section="' + esc(sec.id) + '" placeholder="Add a task…" aria-label="Add a task to ' + esc(sec.name) + '" autocomplete="off">' +
-      '</div>' +
+      body +
     '</div>';
   }
 
@@ -837,6 +944,153 @@ input{font:inherit;color:inherit}
     }).join("");
   }
 
+  /* A rough transcription of the paper sheet, offered as a starting point
+     in the import box so the whole list does not have to be retyped. */
+  var IMPORT_SAMPLE = [
+    "# CI",
+    "BCDR Inventory \u2014 1, 2, 11 \u2014 completed",
+    "/ SDLC Inventory \u2014 6, 1, 4, 7, 12, 13, 14",
+    "/ BCDR DPL \u2014 3, 10, 2, 16",
+    "SDLC DPL \u2014 8, 9, 10, 15, 16 \u2014 not started",
+    "BCDR Deck",
+    "SDLC Deck",
+    "BCDR Crisis Communication Plan",
+    "- All matrix / mapping request \u2014 none",
+    "- SDLC classification & production A's \u2014 backlog update, no criteria",
+    "",
+    "# a.k.a.",
+    "SDLC Analysis",
+    "Scoped Convo",
+    "AI Agent \u2014 Playbook API",
+    "IT MW Memo Feedback",
+    "",
+    "# Sunrun",
+    "S&D help",
+    "SDLC ?",
+    "Sunrun Optiv SME (setup / config)",
+    "Sunrun UI for reporting",
+    "",
+    "# Broadcom",
+    "KR Inventory / Testing",
+    "New Controls",
+    "Track Xtra Work",
+    "Review Controls",
+    "FY27 OTP \u2014 update",
+    "Marco email",
+    "",
+    "# HL",
+    "HL Budget / WIP",
+    "Close out FY25",
+    "x AI Gov Rcm / PBC",
+    "Call Hayward \u2014 Maturity Score",
+    "Ask Brian Kung about BCDR",
+    "Chris Kypreos / Kevin",
+    "- CCPA / BCDR / AI Gov / SOX / TPRM / RCSA / Data Gov / CCM",
+    "",
+    "# GD",
+    "Invoices week of the 21st",
+    "Closeout FY25",
+    "Cindy Holm",
+    "",
+    "# Qualcomm",
+    "3rd Party AI audit",
+    "",
+    "# Admin",
+    "Set up Invoice Task",
+    "Counselee meeting",
+    "Mgr meetings",
+    "Claude Code",
+    "Laptop",
+    "AICP",
+    "KGS PMO",
+    "iCAMP Training",
+    "Smart Comms",
+    "Culture Cloud",
+    "KEATE COE Contest",
+    "MRA presentation",
+    "Additional sales",
+    "Oct 13-16 Planning \u2014 19",
+    "Entertainment \u2014 Nov 30, Dec 1, Jan 3-4"
+  ].join("\n");
+
+  function parseSheet(text){
+    var out = [], cur = null;
+    String(text).split(/\r?\n/).forEach(function(raw){
+      if (!raw.trim()) return;
+      if (/^\s*#/.test(raw)){
+        var name = raw.replace(/^\s*#+\s*/, "").trim();
+        if (name){ cur = { name: name, lines: [] }; out.push(cur); }
+        return;
+      }
+      if (!cur){ cur = { name: "Unfiled", lines: [] }; out.push(cur); }
+      var line = parseLine(raw);
+      if (line.text) cur.lines.push(line);
+    });
+    return out.filter(function(sec){ return sec.lines.length || sec.name; });
+  }
+
+  function applyImport(parsed, replace){
+    if (!parsed.length){ showToast("Nothing to import \u2014 add a # heading first"); return; }
+    var b = state.board;
+    if (replace){ b.sections = []; b.tasks = []; }
+    var fresh = [];
+
+    parsed.forEach(function(ps){
+      var sec = b.sections.find(function(x){
+        return x.name.toLowerCase() === ps.name.toLowerCase();
+      });
+      if (!sec){
+        sec = {
+          id: uid(), name: ps.name,
+          color: PALETTE[b.sections.length % PALETTE.length], collapsed: false
+        };
+        b.sections.push(sec);
+      }
+      ps.lines.forEach(function(line){
+        if (line.done && line.kind === "task"){
+          fresh.push({
+            id: uid(), text: line.text, sectionId: sec.id, sectionName: sec.name,
+            color: sec.color, created: state.today, doneAt: Date.now(), age: 0
+          });
+        } else {
+          b.tasks.push({
+            id: uid(), sectionId: sec.id, text: line.text, created: state.today,
+            kind: line.kind, status: line.status, indent: line.indent
+          });
+        }
+      });
+    });
+
+    state.panel = null;
+    state.confirm = null;
+    if (fresh.length){
+      var day = state.day || { date: state.today, items: [] };
+      commitDay({ date: state.today, items: fresh.concat(day.items) });
+    }
+    commitBoard();
+    showToast("Imported " + plural(parsed.length, "section", "sections"));
+  }
+
+  function importPanel(){
+    var arming = state.confirm === "import-replace";
+    return '<div class="panel">' +
+      '<h2>Import a sheet</h2>' +
+      '<p class="hint">Each <code>#</code> line starts a section. A plain line is a task; ' +
+      '<code>/</code> marks one in progress, <code>-</code> makes a note with no checkbox, ' +
+      '<code>x</code> files it straight into today\u2019s log, and two leading spaces make a sub-line. ' +
+      'A section name that already exists is added to rather than duplicated.</p>' +
+      '<p class="hint caution">What follows is a rough read of your paper sheet \u2014 ' +
+      'check the wording before you import it.</p>' +
+      '<textarea class="copybox" id="importbox" spellcheck="false" aria-label="Sheet to import"></textarea>' +
+      '<div class="prow">' +
+        '<button class="btn" data-act="do-import" data-mode="append">Add to my sheet</button>' +
+        '<button class="btn" data-act="do-import" data-mode="replace">' +
+          (arming ? "Yes \u2014 wipe and replace" : "Replace everything") + '</button>' +
+        '<button class="btn" data-act="close-panel">Cancel</button>' +
+      '</div>' +
+    '</div>';
+  }
+
   function settingsPanel(){
     var s = state.board.settings || { dayStart: 4 };
     var hours = [0,1,2,3,4,5,6,7,8].map(function(h){
@@ -856,6 +1110,11 @@ input{font:inherit;color:inherit}
             ? "Synced to your Claude account — same sheet on every device."
             : "This browser only. Open the published link to sync across devices.") + '</div></div>' +
         '<span class="val">' + (store.kind === "cloud" ? "Synced" : "This device") + '</span>' +
+      '</div>' +
+      '<div class="field">' +
+        '<div><div class="k">Import a sheet</div>' +
+        '<div class="h">Paste a whole list in at once instead of typing it.</div></div>' +
+        '<button class="btn" data-act="open-import">Import\u2026</button>' +
       '</div>' +
       '<div class="field">' +
         '<div><div class="k">Export the log</div>' +
@@ -882,6 +1141,7 @@ input{font:inherit;color:inherit}
     document.getElementById("dateline").textContent = fmtLong(state.today);
     document.getElementById("tally").innerHTML =
       '<span><b>' + c.open + '</b> open</span>' +
+      (c.wip ? '<span><b>' + c.wip + '</b> in prog</span>' : "") +
       '<span><b>' + c.done + '</b> done</span>' +
       (c.carried ? '<span class="' + (c.stale ? "warn" : "") + '"><b>' + c.carried + '</b> carried over</span>' : "");
 
@@ -891,6 +1151,7 @@ input{font:inherit;color:inherit}
     var html = state.view === "today" ? todayView() : logView();
     if (state.panel === "settings") html += settingsPanel();
     if (state.panel === "copy") html += copyPanel();
+    if (state.panel === "import") html += importPanel();
     document.getElementById("main").innerHTML = html;
 
     // restore the drafts a re-render would otherwise wipe
@@ -898,6 +1159,9 @@ input{font:inherit;color:inherit}
       var el = document.getElementById("add-" + sec.id);
       if (el) el.value = state.drafts[sec.id] || "";
     });
+
+    var ib = document.getElementById("importbox");
+    if (ib) ib.value = state.importText;
 
     if (!state.focus && state.editing) state.focus = "edit-" + state.editing.id;
     if (state.focus){
@@ -934,8 +1198,14 @@ input{font:inherit;color:inherit}
       if (!open.length && !done.length) return;
       lines.push(sec.name.toUpperCase());
       open.forEach(function(t){
+        var tab = t.indent ? "    " : "  ";
+        if (t.kind === "note"){ lines.push(tab + "  - " + t.text); return; }
         var n = ageOf(t);
-        lines.push("  [ ] " + t.text + (n ? "   (" + n + "d)" : ""));
+        lines.push(
+          tab + (t.status === "wip" ? "[/] " : "[ ] ") + t.text +
+          (t.status === "waiting" ? "   (waiting)" : "") +
+          (n ? "   (" + n + "d)" : "")
+        );
       });
       done.forEach(function(d){ lines.push("  [x] " + d.text); });
       lines.push("");
@@ -1053,6 +1323,42 @@ input{font:inherit;color:inherit}
         closeTransient(); moveTask(id, +el.getAttribute("data-delta"));
         break;
 
+      case "kind":
+        closeTransient(); setField(id, "kind", el.getAttribute("data-kind"));
+        break;
+
+      case "indent":
+        closeTransient(); setField(id, "indent", +el.getAttribute("data-indent"));
+        break;
+
+      case "status":
+        closeTransient(); setField(id, "status", el.getAttribute("data-status"));
+        break;
+
+      case "toggle-section": {
+        var sc = state.board.sections.find(function(x){ return x.id === id; });
+        if (sc) sc.collapsed = !sc.collapsed;
+        closeTransient(); commitBoard();
+        break;
+      }
+
+      case "open-import":
+        state.importText = state.importText || IMPORT_SAMPLE;
+        state.panel = "import";
+        closeTransient(); render();
+        break;
+
+      case "do-import": {
+        var replace = el.getAttribute("data-mode") === "replace";
+        if (replace && state.confirm !== "import-replace"){
+          state.confirm = "import-replace";
+          render();
+          break;
+        }
+        applyImport(parseSheet(state.importText), replace);
+        break;
+      }
+
       case "retarget":
         closeTransient(); retargetTask(id, el.getAttribute("data-section"));
         break;
@@ -1141,6 +1447,7 @@ input{font:inherit;color:inherit}
     if (t.matches && t.matches(".addline input")){
       state.drafts[t.getAttribute("data-section")] = t.value;
     }
+    if (t.id === "importbox") state.importText = t.value;
   });
 
   document.addEventListener("change", function(e){

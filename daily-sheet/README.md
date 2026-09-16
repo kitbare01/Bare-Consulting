@@ -5,8 +5,12 @@ sheet, a checkbox per task, and whatever isn't finished carries to tomorrow.
 
 ## What it does
 
-- **Sections** — one per client, plus work-admin and personal. Rename,
-  recolour, reorder, delete.
+- **Sections** — one per client, plus admin. Rename, recolour, reorder,
+  collapse, delete.
+- **Three kinds of line** — a task with a checkbox, a task marked *in prog*
+  or *waiting*, and a note that carries no checkbox at all, for the standing
+  context that sits on a paper sheet without ever being "done". Any line can
+  be a sub-line under the one above it.
 - **Automatic carry-over** — there is no "start a new day" step. Open tasks
   stay open, and on a new day they wear a day count (`3d`) that turns amber
   at three days and red at seven. That count is the only thing the paper
@@ -16,6 +20,10 @@ sheet, a checkbox per task, and whatever isn't finished carries to tomorrow.
   long it was carried before it got done.
 - **Configurable day boundary** — a new day starts at 4:00 AM by default, so
   work past midnight still lands on the day it felt like.
+- **Import** — paste a whole sheet in at once: `#` starts a section, `/`
+  marks a task in progress, `-` makes a note, `x` files a line straight into
+  today's log, and two leading spaces make a sub-line. The same prefixes work
+  when typing a single line into a section.
 - **Copy and print** — copy today's sheet (or the whole log) as plain text,
   or print the sheet with the interface stripped out.
 
