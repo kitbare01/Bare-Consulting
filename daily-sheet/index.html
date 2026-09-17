@@ -6,11 +6,11 @@
 <meta name="robots" content="noindex, nofollow">
 <style>
   :root {
-    color-scheme: light dark;
+    color-scheme: dark;
     padding-top: env(safe-area-inset-top, 0px);
     padding-bottom: env(safe-area-inset-bottom, 0px);
   }
-  body { margin: 0; font: 14px system-ui, sans-serif; background: #faf9f7; }
+  body { margin: 0; font: 14px system-ui, sans-serif; background: #001A28; }
   img { max-width: 100%; }
   [hidden] { display: none !important; }
 </style>
@@ -22,63 +22,30 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@600;700&family=Public+Sans:wght@400;500;600&display=swap">
 <style>
 :root{
-  /* UCLA blue leads; gold escalates; a clean cool neutral underneath. */
-  --paper:#F1F5FA;
-  --sheet:#FFFFFF;
-  --sheet-2:#EAF1F9;
-  --ink:#0D2035;
-  --ink-2:#4B6885;
-  --ink-3:#8AA1B8;
-  --rule:#D5E2EF;
-  --rule-2:#E7EFF7;
-  --accent:#2774AE;
-  --accent-soft:#DAEBFE;
-  --warn:#8A6100;
-  --warn-soft:#FFF1CC;
-  --alert:#C8102E;
-  --alert-soft:#FCE4E7;
-  --done:#1F8A5F;
-  --shadow:0 1px 2px rgba(13,32,53,.06), 0 12px 32px -18px rgba(13,32,53,.34);
+  /* Deep UCLA navy ground, warm gold type. Every pairing below clears
+     7:1 against the surface behind it; body text clears 11:1. */
+  color-scheme:dark;
+  --paper:#001A28;      /* page ground, behind the sheet */
+  --sheet:#00304A;      /* the sheet itself */
+  --sheet-2:#0A3E5C;    /* hover, inset fields, menus */
+  --ink:#F2E6C4;        /* body text: pale gold, 11.1:1 on the sheet */
+  --ink-2:#C8B98E;      /* secondary gold, 7.1:1 */
+  --ink-3:#8FA3B4;      /* faint, cool, recedes: placeholders and counts */
+  --rule:#14506F;
+  --rule-2:#0C3E58;
+  --accent:#FFC72C;     /* UCLA gold: structure, focus, emphasis, 8.9:1 */
+  --accent-soft:#12455F;
+  --prio:#4DD0E1;       /* marked for today: the one non-UCLA hue, 7.5:1 */
+  --warn:#FFB86B;       /* ageing */
+  --warn-soft:#3A2A14;
+  --alert:#FF8A80;      /* a week stale */
+  --alert-soft:#42201E;
+  --done:#5FD79B;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 14px 36px -18px rgba(0,0,0,.8);
   --radius:10px;
   --font-body:'Public Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
   --font-display:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
   --font-mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
-}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --paper:#0B1622;
-  --sheet:#13212F;
-  --sheet-2:#1B2D3F;
-  --ink:#E7EFF7;
-  --ink-2:#9DB4CA;
-  --ink-3:#6B85A0;
-  --rule:#273A4E;
-  --rule-2:#1F3043;
-  --accent:#8BB8E8;
-  --accent-soft:#1C3550;
-  --warn:#FFC72C;
-  --warn-soft:#3B2E10;
-  --alert:#FF7A85;
-  --alert-soft:#3D1B22;
-  --done:#45C08C;
-  --shadow:0 1px 2px rgba(0,0,0,.35), 0 12px 32px -18px rgba(0,0,0,.72);
-}}
-:root[data-theme="dark"]{
-  --paper:#0B1622;
-  --sheet:#13212F;
-  --sheet-2:#1B2D3F;
-  --ink:#E7EFF7;
-  --ink-2:#9DB4CA;
-  --ink-3:#6B85A0;
-  --rule:#273A4E;
-  --rule-2:#1F3043;
-  --accent:#8BB8E8;
-  --accent-soft:#1C3550;
-  --warn:#FFC72C;
-  --warn-soft:#3B2E10;
-  --alert:#FF7A85;
-  --alert-soft:#3D1B22;
-  --done:#45C08C;
-  --shadow:0 1px 2px rgba(0,0,0,.35), 0 12px 32px -18px rgba(0,0,0,.72);
 }
 
 *{box-sizing:border-box}
@@ -105,6 +72,7 @@ input{font:inherit;color:inherit}
 }
 .dateblock{min-width:0}
 .dateline{
+  color:var(--accent);
   font-family:var(--font-display);font-weight:700;font-size:23px;line-height:1.15;
   letter-spacing:-.025em;text-wrap:balance;margin:0;
 }
@@ -115,12 +83,12 @@ input{font:inherit;color:inherit}
 .tally b{font-weight:500;color:var(--ink)}
 .tally .warn{color:var(--alert)}
 .tools{display:flex;align-items:center;gap:6px;flex-shrink:0}
-.tabs{display:flex;background:var(--sheet-2);border:1px solid var(--rule);border-radius:9px;padding:2px}
+.tabs{display:flex;background:var(--paper);border:1px solid var(--rule);border-radius:9px;padding:2px}
 .tab{
   font-size:12.5px;font-weight:500;padding:5px 13px;border-radius:7px;
   color:var(--ink-2);white-space:nowrap;
 }
-.tab[aria-selected="true"]{background:var(--sheet);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.tab[aria-selected="true"]{background:var(--sheet-2);color:var(--accent);box-shadow:none}
 .iconbtn{
   width:31px;height:31px;display:grid;place-items:center;border-radius:6px;
   color:var(--ink-2);border:1px solid transparent;
@@ -142,7 +110,7 @@ input{font:inherit;color:inherit}
 .dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
 .secname{
   font-family:var(--font-mono);font-size:11.5px;font-weight:500;
-  letter-spacing:.1em;text-transform:uppercase;color:var(--ink);
+  letter-spacing:.1em;text-transform:uppercase;color:var(--accent);
   min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
 }
 .seccount{font-family:var(--font-mono);font-size:11px;color:var(--ink-3);margin-left:auto;flex-shrink:0}
@@ -231,18 +199,18 @@ input{font:inherit;color:inherit}
 
 /* flagged for today: a rail down the left edge, the way a drawn box
    stands out from a plain written line on paper */
-.row.flag{background:color-mix(in srgb,var(--accent) 5%,transparent)}
-.row.flag:hover{background:color-mix(in srgb,var(--accent) 9%,transparent)}
+.row.flag{background:color-mix(in srgb,var(--prio) 9%,transparent)}
+.row.flag:hover{background:color-mix(in srgb,var(--prio) 15%,transparent)}
 .row.flag::before{
-  content:"";position:absolute;left:0;top:0;bottom:0;width:2px;
-  background:var(--accent);
+  content:"";position:absolute;left:0;top:0;bottom:0;width:3px;
+  background:var(--prio);
 }
 .sheet.focus .row.flag:not(.late):not(.overdue){background:transparent}
 .sheet.focus .row.flag:not(.late):not(.overdue):hover{background:var(--sheet-2)}
 .sheet.focus .row.flag:not(.late):not(.overdue)::before{display:none}
 .row.flag.late::before{background:var(--warn)}
 .row.flag.overdue::before{background:var(--alert)}
-.row.flag .box button{border-color:var(--accent);border-width:2px}
+.row.flag .box button{border-color:var(--prio);border-width:2px}
 .row.flag.late .box button{border-color:var(--warn)}
 .row.flag.overdue .box button{border-color:var(--alert)}
 .flagbtn{
@@ -250,7 +218,7 @@ input{font:inherit;color:inherit}
   color:var(--ink-3);opacity:0;flex-shrink:0;
 }
 .row:hover .flagbtn{opacity:.75}
-.flagbtn.on{opacity:1;color:var(--accent)}
+.flagbtn.on{opacity:1;color:var(--prio)}
 .flagbtn.on.late{color:var(--warn)}
 .flagbtn.on.overdue{color:var(--alert)}
 .flagbtn:hover{background:var(--rule-2);opacity:1}
@@ -284,7 +252,7 @@ input{font:inherit;color:inherit}
 /* menus */
 .menu{
   position:absolute;right:8px;top:calc(100% - 4px);z-index:20;
-  background:var(--sheet);border:1px solid var(--rule);border-radius:7px;
+  background:var(--sheet-2);border:1px solid var(--rule);border-radius:9px;
   box-shadow:var(--shadow);padding:5px;min-width:186px;
 }
 .menu button{
@@ -392,7 +360,9 @@ input{font:inherit;color:inherit}
 }
 
 @media print{
-  :root{--paper:#fff;--sheet:#fff;--sheet-2:#fff;--ink:#000;--ink-2:#333;--ink-3:#666;--rule:#bbb;--rule-2:#ddd}
+  :root{--paper:#fff;--sheet:#fff;--sheet-2:#fff;--ink:#000;--ink-2:#333;--ink-3:#666;
+    --rule:#bbb;--rule-2:#ddd;--accent:#000;--accent-soft:#eee;--prio:#000;
+    --warn:#555;--warn-soft:#eee;--alert:#000;--alert-soft:#eee;--done:#000;--shadow:none}
   .masthead{position:static;border-bottom:1px solid #000}
   .tools,.dots,.grip,.addline,.addsec,.iconbtn,.panel,.menu,.undo{display:none !important}
   .sheet,.logday{box-shadow:none;border-color:#999;break-inside:auto}
@@ -430,7 +400,7 @@ input{font:inherit;color:inherit}
 
   /* ============================ helpers ============================ */
   var STORE_KEY = "daily-sheet-v1";
-  var PALETTE = ["#2774AE","#00A0B0","#C98A00","#7B61FF","#D14D5F","#2FA84F","#5B7A99","#C05621"];
+  var PALETTE = ["#8BB8E8","#4DD0E1","#FFB86B","#B39DFF","#FF9EB1","#6FD79B","#A8BDCE","#E0C36B"];
   var ICON = {
     check:'<svg viewBox="0 0 24 24"><path d="M4 12.5 9.5 18 20 6.5"/></svg>',
     dots :'<svg viewBox="0 0 24 24"><circle cx="12" cy="5.5" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="12" cy="18.5" r="1.7"/></svg>',

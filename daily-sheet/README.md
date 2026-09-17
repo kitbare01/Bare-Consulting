@@ -36,11 +36,21 @@ sheet, a checkbox per task, and whatever isn't finished carries to tomorrow.
 
 ## Colour
 
-UCLA blue (`#2774AE`, and `#8BB8E8` on dark) carries the accent and the
-marked-for-today rail. Gold escalates — a status chip, an ageing badge, a
-mark a day or two old — and a single red is held back for anything a week
-stale. Semantic colours stay separate from the accent: done is green, and
-section dots are a categorical set used only to tell clients apart.
+One deliberate look, not a light/dark pair: a deep UCLA navy ground
+(`#001A28` behind the sheet, `#00304A` for the sheet itself) with warm gold
+type. Body text is a pale gold (`#F2E6C4`) at 11:1 against the sheet rather
+than saturated gold, which is legible but tiring down a long list; full UCLA
+gold (`#FFC72C`, 8.8:1) carries the structure — the date, section names,
+focus rings, in-progress marks.
+
+Priority is deliberately outside that pairing. A line marked for today takes
+a cyan rail and checkbox (`#4DD0E1`, 7.5:1) — the one non-UCLA hue in the
+app, so it cannot be confused with the gold that is everywhere else. Gold
+then escalates an ageing mark, and a soft red is held for a week stale.
+
+Every foreground/background pair clears WCAG AA; the weakest is a secondary
+count at 5.3:1 and body text sits at 11.1:1. Printing overrides the whole
+palette to black on white.
 
 ## Files
 

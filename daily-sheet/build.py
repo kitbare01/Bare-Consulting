@@ -19,11 +19,11 @@ SHELL = """<!doctype html>
 <meta name="robots" content="noindex, nofollow">
 <style>
   :root {
-    color-scheme: light dark;
+    color-scheme: dark;
     padding-top: env(safe-area-inset-top, 0px);
     padding-bottom: env(safe-area-inset-bottom, 0px);
   }
-  body { margin: 0; font: 14px system-ui, sans-serif; background: #faf9f7; }
+  body { margin: 0; font: 14px system-ui, sans-serif; background: #001A28; }
   img { max-width: 100%; }
   [hidden] { display: none !important; }
 </style>
