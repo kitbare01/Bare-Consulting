@@ -17,7 +17,7 @@
   --rule-2:#0C3E58;
   --accent:#FFC72C;     /* UCLA gold: structure, focus, emphasis, 8.9:1 */
   --accent-soft:#12455F;
-  --prio:#4DD0E1;       /* marked for today: the one non-UCLA hue, 7.5:1 */
+  --prio:#4DD0E1;       /* on today's list: the one non-UCLA hue, 7.5:1 */
   --warn:#FFB86B;       /* ageing */
   --warn-soft:#3A2A14;
   --alert:#FF8A80;      /* a week stale */
@@ -25,6 +25,7 @@
   --done:#5FD79B;
   --shadow:0 1px 2px rgba(0,0,0,.4), 0 14px 36px -18px rgba(0,0,0,.8);
   --radius:10px;
+  --wrap:820px;
   --font-body:'Public Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
   --font-display:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
   --font-mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
@@ -41,7 +42,9 @@ button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:poin
 input{font:inherit;color:inherit}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:3px}
 
-.wrap{max-width:780px;margin:0 auto;padding-inline:16px;padding-block:0 96px}
+.wrap{max-width:var(--wrap);margin:0 auto;padding-inline:16px;padding-block:0 96px}
+@media (min-width:780px){:root{--wrap:1120px}}
+@media (min-width:1150px){:root{--wrap:1480px}}
 
 /* ---------- masthead ---------- */
 .masthead{
@@ -49,7 +52,7 @@ input{font:inherit;color:inherit}
   background:var(--paper); border-bottom:1px solid var(--rule);
 }
 .masthead-in{
-  max-width:780px;margin:0 auto;padding-inline:16px;padding-block:14px 10px;
+  max-width:var(--wrap);margin:0 auto;padding-inline:16px;padding-block:14px 10px;
   display:flex;flex-wrap:wrap;gap:10px 16px;align-items:flex-end;justify-content:space-between;
 }
 .dateblock{min-width:0}
@@ -80,12 +83,15 @@ input{font:inherit;color:inherit}
 .iconbtn svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
 
 /* ---------- the sheet ---------- */
-.sheet{
-  background:var(--sheet);border:1px solid var(--rule);border-radius:var(--radius);
-  box-shadow:var(--shadow);margin-top:18px;
+/* One column on a phone; two, then three as the window widens, the way the
+   paper sheet runs across a landscape page. The columns are real elements
+   rather than CSS multicol, so a menu is never fragmented across one. */
+.sheet{margin-top:18px;display:flex;align-items:flex-start;gap:16px}
+.col{flex:1 1 0;min-width:0;display:flex;flex-direction:column;gap:16px}
+.section{
+  background:var(--sheet);border:1px solid var(--rule);
+  border-radius:var(--radius);box-shadow:var(--shadow);
 }
-.section{border-bottom:1px solid var(--rule-2)}
-.section:last-of-type{border-bottom:0}
 .sechead{
   display:flex;align-items:center;gap:9px;
   padding:14px 14px 8px 14px;position:relative;
@@ -180,42 +186,48 @@ input{font:inherit;color:inherit}
 .addline input::placeholder{color:var(--ink-3)}
 .addline input:focus{outline:none;border-bottom-color:var(--accent)}
 
-/* flagged for today: a rail down the left edge, the way a drawn box
-   stands out from a plain written line on paper */
-.row.flag{background:color-mix(in srgb,var(--prio) 9%,transparent)}
-.row.flag:hover{background:color-mix(in srgb,var(--prio) 15%,transparent)}
-.row.flag::before{
+/* Two independent marks. Today is cyan, priority is gold, and a line may
+   carry either, both, or neither; carrying both gives it a split rail. */
+.row.today{background:color-mix(in srgb,var(--prio) 9%,transparent)}
+.row.today:hover{background:color-mix(in srgb,var(--prio) 15%,transparent)}
+.row.today::before,.row.hi::before{
   content:"";position:absolute;left:0;top:0;bottom:0;width:3px;
   background:var(--prio);
 }
-.sheet.focus .row.flag:not(.late):not(.overdue){background:transparent}
-.sheet.focus .row.flag:not(.late):not(.overdue):hover{background:var(--sheet-2)}
-.sheet.focus .row.flag:not(.late):not(.overdue)::before{display:none}
-.row.flag.hi{background:color-mix(in srgb,var(--accent) 13%,transparent)}
-.row.flag.hi:hover{background:color-mix(in srgb,var(--accent) 19%,transparent)}
-.row.flag.hi::before{background:var(--accent);width:4px}
-.row.flag.hi .box button{border-color:var(--accent)}
-.row.flag.hi .text{font-weight:600}
-.flagbtn.on.hi{color:var(--accent)}
-.flagbtn.on.hi svg{width:15px}
-.sheet.focus .row.flag.hi{background:color-mix(in srgb,var(--accent) 13%,transparent)}
-.sheet.focus .row.flag.hi::before{display:block}
-.row.flag.late::before{background:var(--warn)}
-.row.flag.overdue::before{background:var(--alert)}
-.row.flag .box button{border-color:var(--prio);border-width:2px}
-.row.flag.late .box button{border-color:var(--warn)}
-.row.flag.overdue .box button{border-color:var(--alert)}
-.flagbtn{
+.row.today .box button{border-color:var(--prio);border-width:2px}
+.row.today.late::before{background:var(--warn)}
+.row.today.overdue::before{background:var(--alert)}
+.row.today.late .box button{border-color:var(--warn)}
+.row.today.overdue .box button{border-color:var(--alert)}
+
+.row.hi{background:color-mix(in srgb,var(--accent) 12%,transparent)}
+.row.hi:hover{background:color-mix(in srgb,var(--accent) 18%,transparent)}
+.row.hi::before{background:var(--accent);width:4px}
+.row.hi .box button{border-color:var(--accent);border-width:2px}
+.row.hi .text{font-weight:600}
+.row.hi.today::before{
+  width:4px;
+  background:linear-gradient(to bottom,var(--accent) 0 50%,var(--prio) 50% 100%);
+}
+
+/* inside Today every line is already on today's list, so that rail says
+   nothing there - an overdue or high-priority one still does */
+.sheet.focus .row.today:not(.late):not(.overdue):not(.hi){background:transparent}
+.sheet.focus .row.today:not(.late):not(.overdue):not(.hi):hover{background:var(--sheet-2)}
+.sheet.focus .row.today:not(.late):not(.overdue):not(.hi)::before{display:none}
+
+.markbtn{
   width:22px;height:22px;display:grid;place-items:center;border-radius:5px;
   color:var(--ink-3);opacity:0;flex-shrink:0;
 }
-.row:hover .flagbtn{opacity:.75}
-.flagbtn.on{opacity:1;color:var(--prio)}
-.flagbtn.on.late{color:var(--warn)}
-.flagbtn.on.overdue{color:var(--alert)}
-.flagbtn:hover{background:var(--rule-2);opacity:1}
-@media (hover:none){.flagbtn{opacity:.5}}
-.flagbtn svg{width:12px;height:12px}
+.row:hover .markbtn{opacity:.75}
+.markbtn.on{opacity:1;color:var(--prio)}
+.markbtn.on.late{color:var(--warn)}
+.markbtn.on.overdue{color:var(--alert)}
+.markbtn.star.on{color:var(--accent)}
+.markbtn:hover{background:var(--rule-2);opacity:1}
+@media (hover:none){.markbtn{opacity:.5}}
+.markbtn svg{width:13px;height:13px}
 
 /* line kinds: notes carry no checkbox, sub-lines sit indented */
 .row.note .box{visibility:hidden}
@@ -276,12 +288,18 @@ input{font:inherit;color:inherit}
 
 /* footers / misc */
 .addsec{
-  display:flex;align-items:center;gap:8px;padding:13px 14px;width:100%;
-  color:var(--ink-3);font-size:13px;border-top:1px solid var(--rule-2);
-  border-radius:0 0 var(--radius) var(--radius);
+  display:flex;align-items:center;gap:8px;padding:12px 14px;width:100%;
+  color:var(--ink-3);font-size:13px;border:1px dashed var(--rule);
+  border-radius:var(--radius);margin-top:16px;
 }
-.addsec:hover{background:var(--sheet-2);color:var(--ink)}
+.addsec:hover{background:var(--sheet);color:var(--ink)}
 .empty{padding:20px 14px 20px 38px;color:var(--ink-3);font-size:13.5px;font-style:italic}
+
+.strays{border-style:dashed;border-color:var(--accent);box-shadow:none}
+.strayhead{
+  font-family:var(--font-mono);font-size:10px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--accent);padding:13px 14px 4px;
+}
 
 /* log view */
 .logday{margin-top:18px;background:var(--sheet);border:1px solid var(--rule);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
@@ -399,7 +417,8 @@ input{font:inherit;color:inherit}
     grip :'<svg viewBox="0 0 10 14"><circle cx="2" cy="2" r="1.3"/><circle cx="8" cy="2" r="1.3"/><circle cx="2" cy="7" r="1.3"/><circle cx="8" cy="7" r="1.3"/><circle cx="2" cy="12" r="1.3"/><circle cx="8" cy="12" r="1.3"/></svg>',
     flagOn :'<svg viewBox="0 0 12 12"><path d="M3 1.4 10.2 6 3 10.6z" fill="currentColor"/></svg>',
     flagOff:'<svg viewBox="0 0 12 12"><path d="M3 1.4 10.2 6 3 10.6z" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>',
-    flagHi :'<svg viewBox="0 0 14 12"><path d="M1 1.4 7.1 6 1 10.6z" fill="currentColor"/><path d="M6.7 1.4 12.8 6 6.7 10.6z" fill="currentColor"/></svg>',
+    starOn :'<svg viewBox="0 0 14 14"><path d="M7 1.1 8.8 5 13 5.5l-3.1 2.9.8 4.2L7 10.6 3.3 12.6l.8-4.2L1 5.5 5.2 5z" fill="currentColor"/></svg>',
+    starOff:'<svg viewBox="0 0 14 14"><path d="M7 1.1 8.8 5 13 5.5l-3.1 2.9.8 4.2L7 10.6 3.3 12.6l.8-4.2L1 5.5 5.2 5z" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg>',
     caret:'<svg viewBox="0 0 10 10"><path d="M1 3h8L5 8z"/></svg>',
     undo :'<svg viewBox="0 0 24 24"><path d="M3 10h11a5 5 0 0 1 0 10h-3"/><path d="M7 6 3 10l4 4"/></svg>'
   };
@@ -451,16 +470,16 @@ input{font:inherit;color:inherit}
     var text = String(raw).replace(/^\s+/, "");
     var kind = "task", status = "", done = false, flag = false;
     var hi = false;
-    var bang = text.match(/^(!!?)\s*/);
-    if (bang){
-      flag = true;
-      hi = bang[1] === "!!";
-      text = text.slice(bang[0].length);
+    var marks = text.match(/^[!*]+\s*/);
+    if (marks){
+      flag = marks[0].indexOf("!") >= 0;
+      hi = marks[0].indexOf("*") >= 0;
+      text = text.slice(marks[0].length);
     }
-    var m = text.match(/^([-*\u2013\u2014\/x\u00d7\u2713])\s+/i);
+    var m = text.match(/^([-\u2013\u2014\/x\u00d7\u2713])\s+/i);
     if (m){
       var c = m[1].toLowerCase();
-      if (c === "-" || c === "*" || c === "\u2013" || c === "\u2014") kind = "note";
+      if (c === "-" || c === "\u2013" || c === "\u2014") kind = "note";
       else if (c === "/") status = "wip";
       else done = true;
       text = text.slice(m[0].length);
@@ -594,11 +613,12 @@ input{font:inherit;color:inherit}
       tasks: [
         t(7, "Settings \u2192 Import a sheet: paste your whole list in at once",
              null, null, 0, true),
-        t(7, "Click the \u25B8 again to raise a line to high priority",
+        t(7, "\u2605 and \u25B8 are independent \u2014 this line carries both",
              null, null, 0, true, true),
-        t(7, "Click the \u25B8 on the right to mark a line for today",
-             null, null, 0, true),
-        t(7, "Unmarked lines just sit on the list \u2014 the Today tab hides them"),
+        t(7, "\u25B8 puts a line on today's list", null, null, 0, true),
+        t(7, "\u2605 makes it high priority, on today's list or not",
+             null, null, 0, false, true),
+        t(7, "An unmarked line just sits here \u2014 the Today tab hides it"),
         t(7, "Start a line with / to mark it under way", null, "wip"),
         t(7, "Two leading spaces make a sub-line", null, null, 1)
       ]
@@ -646,7 +666,7 @@ input{font:inherit;color:inherit}
     return {
       open: work.length,
       flagged: work.filter(function(t){ return !!t.flag; }).length,
-      high: work.filter(function(t){ return !!t.flag && !!t.hi; }).length,
+      high: work.filter(function(t){ return !!t.hi; }).length,
       done: ((state.day && state.day.items) || []).length,
       wip: work.filter(function(t){ return t.status === "wip"; }).length,
       carried: work.filter(function(t){ return ageOf(t) > 0; }).length,
@@ -823,7 +843,8 @@ input{font:inherit;color:inherit}
       (isNote ? " note" : "") +
       (task.indent ? " ind" : "") +
       (task.status === "wip" ? " wip" : "") +
-      (task.flag ? " flag" + (task.hi ? " hi" : "") + flagClass(task) : "");
+      (task.flag ? " today" + flagClass(task) : "") +
+      (task.hi ? " hi" : "");
 
     var body = editing
       ? '<input class="textedit" id="edit-' + esc(task.id) + '" data-id="' + esc(task.id) +
@@ -846,7 +867,7 @@ input{font:inherit;color:inherit}
         '<div class="meta">' +
           chip +
           ageBadge(task) +
-          (isNote ? "" : flagButton(task)) +
+          (isNote ? "" : markButtons(task)) +
           '<span class="grip" aria-hidden="true">' + ICON.grip + '</span>' +
           '<button class="dots' + (menuOpen ? " open" : "") + '" data-act="menu" data-kind="task" data-id="' + esc(task.id) + '" aria-label="Line options" aria-expanded="' + (menuOpen ? "true" : "false") + '">' + ICON.dots + '</button>' +
         '</div>' +
@@ -854,23 +875,24 @@ input{font:inherit;color:inherit}
       '</div>';
   }
 
-  function flagButton(task){
+  function markButtons(task){
     var n = flagAge(task);
     var age = n > 0 ? " \u2014 marked " + plural(n, "day", "days") + " ago" : "";
-    var label, icon, cls;
 
-    if (n < 0){
-      label = "Mark for today"; icon = ICON.flagOff; cls = "";
-    } else if (task.hi){
-      label = "High priority" + age + " \u2014 click to clear";
-      icon = ICON.flagHi; cls = " on hi";
-    } else {
-      label = "On today's list" + age + " \u2014 click to raise to high priority";
-      icon = ICON.flagOn; cls = " on" + flagClass(task);
-    }
+    var star = task.hi ? "High priority \u2014 click to clear" : "Make high priority";
+    var day = n < 0
+      ? "Put on today's list"
+      : "On today's list" + age + " \u2014 click to take off";
 
-    return '<button class="flagbtn' + cls + '" data-act="flag" data-id="' + esc(task.id) +
-      '" title="' + esc(label) + '" aria-label="' + esc(label) + '">' + icon + '</button>';
+    return '' +
+      '<button class="markbtn star' + (task.hi ? " on" : "") +
+        '" data-act="prio" data-id="' + esc(task.id) + '" title="' + esc(star) +
+        '" aria-pressed="' + (task.hi ? "true" : "false") + '" aria-label="' + esc(star) + '">' +
+        (task.hi ? ICON.starOn : ICON.starOff) + '</button>' +
+      '<button class="markbtn' + (n < 0 ? "" : " on" + flagClass(task)) +
+        '" data-act="flag" data-id="' + esc(task.id) + '" title="' + esc(day) +
+        '" aria-pressed="' + (n < 0 ? "false" : "true") + '" aria-label="' + esc(day) + '">' +
+        (n < 0 ? ICON.flagOff : ICON.flagOn) + '</button>';
   }
 
   function taskMenu(task){
@@ -895,15 +917,12 @@ input{font:inherit;color:inherit}
     );
     return '<div class="menu">' +
       (isNote ? "" :
-        (task.flag && task.hi ? "" :
-          '<button data-act="flag" data-id="' + esc(task.id) + '" data-level="high">' +
-            '<span class="swatch" style="background:var(--accent)"></span>High priority</button>') +
-        (task.flag && !task.hi ? "" :
-          '<button data-act="flag" data-id="' + esc(task.id) + '" data-level="today">' +
-            '<span class="swatch" style="background:var(--prio)"></span>On today\u2019s list</button>') +
-        (task.flag
-          ? '<button data-act="flag" data-id="' + esc(task.id) + '" data-level="">Take off today</button>'
-          : "") +
+        '<button data-act="prio" data-id="' + esc(task.id) + '">' +
+          '<span class="swatch" style="background:var(--accent)"></span>' +
+          (task.hi ? "Clear high priority" : "Make high priority") + '</button>' +
+        '<button data-act="flag" data-id="' + esc(task.id) + '">' +
+          '<span class="swatch" style="background:var(--prio)"></span>' +
+          (task.flag ? "Take off today\u2019s list" : "Put on today\u2019s list") + '</button>' +
         '<div class="sep"></div>') +
       '<button data-act="edit-task" data-id="' + esc(task.id) + '">Edit text</button>' +
       statusRow +
@@ -1006,26 +1025,84 @@ input{font:inherit;color:inherit}
     '</div>';
   }
 
+  /* Three columns on a laptop or a tablet held sideways, two at middling
+     widths, one on a phone held upright. */
+  function columnCount(){
+    var w = window.innerWidth || 1024;
+    return w >= 1150 ? 3 : (w >= 780 ? 2 : 1);
+  }
+
+  function sectionWeight(sec, focus){
+    if (sec.collapsed) return 2;
+    var lines = tasksOf(sec.id);
+    if (focus) lines = lines.filter(function(t){ return !!t.flag; });
+    return 3 + lines.length + doneOf(sec.id).length;
+  }
+
+  /* Place the longest sections first, each into whichever column is
+     currently shortest - placing in source order lets one long section land
+     last and leave every other column short. Each column is then put back
+     into the sheet's own order, so the arrangement still reads as yours. */
+  function distribute(secs, n, focus){
+    var cols = [], load = [], i;
+    for (i = 0; i < n; i++){ cols.push([]); load.push(0); }
+
+    var rank = {};
+    secs.forEach(function(sec, idx){ rank[sec.id] = idx; });
+
+    secs.slice()
+      .sort(function(a, b){ return sectionWeight(b, focus) - sectionWeight(a, focus); })
+      .forEach(function(sec){
+        var k = 0;
+        for (var j = 1; j < n; j++) if (load[j] < load[k]) k = j;
+        cols[k].push(sec);
+        load[k] += sectionWeight(sec, focus);
+      });
+
+    cols.forEach(function(col){
+      col.sort(function(a, b){ return rank[a.id] - rank[b.id]; });
+    });
+    return cols;
+  }
+
   function sheetView(focus){
     var secs = state.board.sections;
+    var strays = [];
 
     if (focus){
+      strays = state.board.tasks.filter(function(t){
+        return t.hi && !t.flag && t.kind !== "note";
+      });
       secs = secs.filter(function(sec){
         return doneOf(sec.id).length ||
                tasksOf(sec.id).some(function(t){ return !!t.flag; });
       });
-      if (!secs.length){
-        return '<div class="blank">Nothing marked for today yet.<br>' +
+      if (!secs.length && !strays.length){
+        return '<div class="blank">Nothing on today\u2019s list yet.<br>' +
           'On the All tab, click the \u25B8 beside anything you mean to get ' +
           'done today \u2014 or start a new line with !</div>';
       }
     }
 
-    return '<div class="sheet' + (focus ? " focus" : "") + '">' +
-      secs.map(function(sec){ return sectionBlock(sec, focus); }).join("") +
+    var cols = distribute(secs, columnCount(), focus);
+
+    var stray = strays.length
+      ? '<div class="section strays">' +
+          '<div class="strayhead">High priority, not on today\u2019s list</div>' +
+          '<div class="rows">' + strays.map(taskRow).join("") + '</div>' +
+        '</div>'
+      : "";
+
+    var body = cols.map(function(col, i){
+      return '<div class="col">' +
+        col.map(function(sec){ return sectionBlock(sec, focus); }).join("") +
+        (i === cols.length - 1 ? stray : "") +
+      '</div>';
+    }).join("");
+
+    return '<div class="sheet' + (focus ? " focus" : "") + '">' + body + '</div>' +
       (focus ? "" :
-        '<button class="addsec" data-act="add-section"><span aria-hidden="true">+</span> Add a section</button>') +
-    '</div>';
+        '<button class="addsec" data-act="add-section"><span aria-hidden="true">+</span> Add a section</button>');
   }
 
   function logView(){
@@ -1192,7 +1269,8 @@ input{font:inherit;color:inherit}
       '<h2>Import a sheet</h2>' +
       '<p class="hint">Each <code>#</code> line starts a section. A plain line is a task; ' +
       '<code>/</code> marks one in progress, <code>-</code> makes a note with no checkbox, ' +
-      '<code>x</code> files it straight into today\u2019s log, <code>!</code> marks it for today and <code>!!</code> makes it high priority, ' +
+      '<code>x</code> files it straight into today\u2019s log, <code>!</code> puts it on today\u2019s list and <code>*</code> makes it high priority ' +
+      '(<code>!*</code> does both), ' +
       'and two leading spaces make a sub-line. ' +
       'A section name that already exists is added to rather than duplicated.</p>' +
       '<p class="hint caution">What follows is a rough read of your paper sheet \u2014 ' +
@@ -1322,7 +1400,7 @@ input{font:inherit;color:inherit}
         if (t.kind === "note"){ lines.push(tab + "  - " + t.text); return; }
         var n = ageOf(t);
         lines.push(
-          tab + (t.flag ? (t.hi ? "\u25B8\u25B8" : "\u25B8 ") : "  ") + " " +
+          tab + (t.hi ? "\u2605" : " ") + (t.flag ? "\u25B8" : " ") + " " +
           (t.status === "wip" ? "[/] " : "[ ] ") + t.text +
           (t.status === "waiting" ? "   (waiting)" : "") +
           (n ? "   (" + n + "d)" : "")
@@ -1447,15 +1525,14 @@ input{font:inherit;color:inherit}
 
       case "flag": {
         var ft = state.board.tasks.find(function(x){ return x.id === id; });
-        if (ft){
-          var want = el.getAttribute("data-level");
-          if (want === null){
-            // the marker itself cycles: nothing -> today -> high -> nothing
-            want = !ft.flag ? "today" : (ft.hi ? "" : "high");
-          }
-          ft.flag = want ? (ft.flag || state.today) : "";
-          ft.hi = want === "high";
-        }
+        if (ft) ft.flag = ft.flag ? "" : state.today;
+        closeTransient(); commitBoard();
+        break;
+      }
+
+      case "prio": {
+        var pt = state.board.tasks.find(function(x){ return x.id === id; });
+        if (pt) pt.hi = !pt.hi;
         closeTransient(); commitBoard();
         break;
       }
@@ -1692,6 +1769,15 @@ input{font:inherit;color:inherit}
     setInterval(function(){
       if (state.board && checkDayRollover()) render();
     }, 30000);
+
+    var lastCols = columnCount(), resizeTimer = null;
+    window.addEventListener("resize", function(){
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(function(){
+        var n = columnCount();
+        if (n !== lastCols){ lastCols = n; render(); }
+      }, 150);
+    });
 
     render();
   }

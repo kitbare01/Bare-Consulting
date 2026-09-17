@@ -10,10 +10,13 @@ sheet, a checkbox per task, and whatever isn't finished carries to tomorrow.
 - **Marking a line for today** — on the paper sheet, drawing a checkbox
   beside an item is the commitment: it means *I intend to do this today*,
   as distinct from the running list around it. That mark is its own thing
-  here, the `▸` on each line, which cycles: nothing, on today's list,
-  high priority. Marked lines carry a rail down the left edge on the full
-  sheet, and the **Today** tab shows only them, high priority first. A line
-  still marked days later says so, in amber and then red.
+  here, and it is independent of importance: `▸` puts a line on today's
+  list, `★` makes it high priority, and a line may carry either, both, or
+  neither. Marked lines take a rail down the left edge (cyan, gold, or split
+  when both), the **Today** tab shows today's list with high priority first,
+  and anything high priority but *not* on today's list is gathered at the
+  foot of that tab so it cannot quietly disappear. A line still on today's
+  list days later says so, in gold and then red.
 - **Every line is checkable**, and can carry an *in prog* or *waiting*
   status. A line can also be demoted to a note, which drops its checkbox and
   keeps it out of the tally, for reference text that is never "done". Any
@@ -34,6 +37,16 @@ sheet, a checkbox per task, and whatever isn't finished carries to tomorrow.
   when typing a single line into a section.
 - **Copy and print** — copy today's sheet (or the whole log) as plain text,
   or print the sheet with the interface stripped out.
+
+## Layout
+
+Sections are cards laid into balanced columns: three on a laptop or a tablet
+held sideways (≥1150px), two at middling widths, one on a phone held
+upright. The columns are real elements rather than CSS multicol, so a menu
+opening inside one is never fragmented across the gap. The longest sections
+are placed first, each into whichever column is currently shortest, and each
+column is then restored to the sheet's own order — placing in source order
+lets one long section land last and leave every other column short.
 
 ## Colour
 
