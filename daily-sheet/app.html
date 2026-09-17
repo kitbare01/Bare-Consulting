@@ -350,6 +350,32 @@ input{font:inherit;color:inherit}
   border:1px solid var(--rule-2);border-radius:3px;padding:1px 4px}
 .hint.caution{color:var(--alert)}
 .prow{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.review{margin-top:12px;border-top:1px solid var(--rule-2)}
+.revsec{
+  font-family:var(--font-mono);font-size:10.5px;letter-spacing:.09em;
+  text-transform:uppercase;color:var(--ink-2);padding:11px 0 3px;
+}
+.revrow{display:flex;gap:8px;align-items:baseline;padding:3px 0;font-size:14px}
+.revrow .marks{
+  font-size:12px;flex-shrink:0;width:32px;letter-spacing:1px;
+  font-family:var(--font-mono);
+}
+.revrow .marks .s{color:var(--accent)}
+.revrow .marks .d{color:var(--prio)}
+.revrow .st{
+  margin-left:auto;flex-shrink:0;padding-left:8px;
+  font-family:var(--font-mono);font-size:10.5px;color:var(--ink-3);
+}
+.thinking{
+  display:flex;align-items:center;gap:9px;padding:14px 0 4px;
+  color:var(--ink-2);font-size:13.5px;
+}
+.spinner{
+  width:13px;height:13px;border:2px solid var(--rule);border-top-color:var(--accent);
+  border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.spinner{animation-duration:2.4s}}
 .copybox{width:100%;min-height:210px;margin-top:10px;font-family:var(--font-mono);font-size:12px;
   background:var(--sheet-2);border:1px solid var(--rule);border-radius:5px;padding:9px;color:var(--ink);resize:vertical}
 .toast{
@@ -393,6 +419,7 @@ input{font:inherit;color:inherit}
         <button class="tab" role="tab" id="tab-today" data-act="view" data-view="today" aria-selected="false">Today</button>
         <button class="tab" role="tab" id="tab-log" data-act="view" data-view="log" aria-selected="false">Log</button>
       </div>
+      <button class="iconbtn" id="btn-dictate" data-act="dictate" title="Dictate a list" aria-label="Dictate a list" hidden><svg viewBox="0 0 24 24"><rect x="9" y="2.5" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0"/><path d="M12 17.5V21"/></svg></button>
       <button class="iconbtn" id="btn-copy" data-act="copy" title="Copy today as text" aria-label="Copy today as text"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h8"/></svg></button>
       <button class="iconbtn" id="btn-print" data-act="print" title="Print this sheet" aria-label="Print this sheet"><svg viewBox="0 0 24 24"><path d="M6 9V3h12v6"/><rect x="4" y="9" width="16" height="7" rx="2"/><path d="M8 14h8v7H8z"/></svg></button>
       <button class="iconbtn" id="btn-settings" data-act="settings" title="Settings" aria-label="Settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-2.7 1.1V21a2 2 0 1 1-4 0v-.1A1.6 1.6 0 0 0 7.5 19l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0-1.1-2.7H3a2 2 0 1 1 0-4h.1A1.6 1.6 0 0 0 4.6 7.5l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 2.7-1.1V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 2.7 1.1l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0 1.1 2.7H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1.3z"/></svg></button>
@@ -589,6 +616,11 @@ input{font:inherit;color:inherit}
     confirm: null,      // id pending delete confirmation
     drafts: {},         // sectionId -> in-progress text
     importText: "",     // draft in the import box
+    dictText: "",       // draft in the dictation box
+    dictBusy: false,
+    dictResult: null,   // what Claude made of it, pending review
+    dictError: "",
+    sampler: null,      // the sample capability, when this view has it
     focus: null,        // element id to restore focus to
     dragId: null
   };
@@ -1263,6 +1295,188 @@ input{font:inherit;color:inherit}
     showToast("Imported " + plural(parsed.length, "section", "sections"));
   }
 
+  /* ---- dictation -------------------------------------------------- */
+  /* The page cannot reach a microphone from inside the viewer frame, so the
+     device's own dictation fills the box and Claude only does the sorting. */
+
+  var SAMPLE_ERRORS = {
+    not_granted: "You declined Claude access for this page. Reload to be asked again.",
+    sampling_disabled: "Claude isn't available on this account.",
+    rate_limited: "Too many requests just now \u2014 give it a minute and try again.",
+    session_expired: "Your session expired. Sign in again, then retry.",
+    prompt_too_large: "That's too long to sort in one go \u2014 split it in half.",
+    invalid_json: "Claude's reply came back garbled. Try again.",
+    empty_completion: "Claude returned nothing. Try rewording it.",
+    refused: "Claude declined to sort that text.",
+    cancelled: ""
+  };
+
+  function dictPrompt(text){
+    var names = state.board.sections.map(function(x){ return "- " + x.name; }).join("\n");
+    return [
+      "Sort a spoken brain-dump into a daily task sheet.",
+      "",
+      "The sheet already has these sections:",
+      names,
+      "",
+      "What was dictated (speech-to-text, so expect run-on sentences and",
+      "mis-heard words \u2014 keep the speaker's own shorthand and abbreviations):",
+      '"""',
+      text.slice(0, 12000),
+      '"""',
+      "",
+      "Reply with only a JSON array, one object per distinct task:",
+      '{"section": string, "text": string, "today": boolean, "high": boolean, "status": ""|"wip"|"waiting"}',
+      "",
+      "Rules:",
+      "- section: one of the names above when it plainly fits; otherwise a new short name.",
+      "- text: the task itself, short and imperative. Do not invent tasks, and do not",
+      "  expand abbreviations or acronyms the speaker used.",
+      "- today: true only if they said it is for today, this morning, now, or similar.",
+      "- high: true only if they called it urgent, high priority, critical, or similar.",
+      "- status: \"wip\" if already under way, \"waiting\" if blocked on another person,",
+      "  otherwise an empty string.",
+      "- Asides that are not tasks are left out."
+    ].join("\n");
+  }
+
+  function runDictation(){
+    var text = (state.dictText || "").trim();
+    if (!text){ showToast("Nothing to sort yet"); return; }
+    if (!state.sampler) return;
+
+    state.dictBusy = true;
+    state.dictError = "";
+    state.dictResult = null;
+    state.dictAbort = new AbortController();
+    render();
+
+    state.sampler.json(dictPrompt(text), {
+      modelTier: "default",
+      cache: false,
+      signal: state.dictAbort.signal
+    })
+      .then(function(items){
+        state.dictBusy = false;
+        if (!Array.isArray(items) || !items.length){
+          state.dictError = "Claude didn't find any tasks in that.";
+        } else {
+          state.dictResult = items.filter(function(it){
+            return it && String(it.text || "").trim();
+          });
+        }
+        render();
+      })
+      .catch(function(e){
+        state.dictBusy = false;
+        var code = (e && e.code) || "upstream_error";
+        state.dictError = SAMPLE_ERRORS[code] ||
+          "That didn't go through \u2014 try again in a moment.";
+        render();
+      });
+  }
+
+  function applyParsed(items){
+    var b = state.board;
+    var added = 0;
+
+    items.forEach(function(it){
+      var name = String(it.section || "").trim() || "Unfiled";
+      var sec = b.sections.find(function(x){
+        return x.name.toLowerCase() === name.toLowerCase();
+      });
+      if (!sec){
+        sec = {
+          id: uid(), name: name,
+          color: PALETTE[b.sections.length % PALETTE.length], collapsed: false
+        };
+        b.sections.push(sec);
+      }
+      var text = String(it.text || "").trim();
+      if (!text) return;
+      var status = (it.status === "wip" || it.status === "waiting") ? it.status : "";
+      b.tasks.push({
+        id: uid(), sectionId: sec.id, text: text, created: state.today,
+        kind: "task", status: status, indent: 0,
+        flag: it.today ? state.today : "",
+        hi: !!it.high
+      });
+      added++;
+    });
+
+    state.panel = null;
+    state.dictResult = null;
+    state.dictText = "";
+    commitBoard();
+    showToast("Added " + plural(added, "task", "tasks"));
+  }
+
+  function reviewList(items){
+    var groups = [];
+    items.forEach(function(it){
+      var name = String(it.section || "Unfiled").trim() || "Unfiled";
+      var g = groups.find(function(x){ return x.name === name; });
+      if (!g){ g = { name: name, items: [] }; groups.push(g); }
+      g.items.push(it);
+    });
+
+    return '<div class="review">' + groups.map(function(g){
+      var isNew = !state.board.sections.some(function(x){
+        return x.name.toLowerCase() === g.name.toLowerCase();
+      });
+      return '<div class="revsec">' + esc(g.name) + (isNew ? " \u00B7 new section" : "") + '</div>' +
+        g.items.map(function(it){
+          var marks =
+            (it.high ? '<span class="s">\u2605</span>' : '<span>\u00A0</span>') +
+            (it.today ? '<span class="d">\u25B8</span>' : '<span>\u00A0</span>');
+          var st = it.status === "wip" ? "in prog"
+                 : (it.status === "waiting" ? "waiting" : "");
+          return '<div class="revrow"><span class="marks">' + marks + '</span>' +
+            '<span>' + esc(it.text) + '</span>' +
+            (st ? '<span class="st">' + esc(st) + '</span>' : "") + '</div>';
+        }).join("");
+    }).join("") + '</div>';
+  }
+
+  function dictatePanel(){
+    if (state.dictResult){
+      return '<div class="panel">' +
+        '<h2>Before it goes in</h2>' +
+        '<p class="hint">' + plural(state.dictResult.length, "task", "tasks") +
+        ' \u2014 \u2605 is high priority, \u25B8 is today\u2019s list. ' +
+        'Add them, then fix anything that came out wrong on the sheet itself.</p>' +
+        reviewList(state.dictResult) +
+        '<div class="prow">' +
+          '<button class="btn" data-act="dict-apply">Add to my sheet</button>' +
+          '<button class="btn" data-act="dict-back">Back to the text</button>' +
+          '<button class="btn" data-act="close-panel">Cancel</button>' +
+        '</div>' +
+      '</div>';
+    }
+
+    return '<div class="panel">' +
+      '<h2>Dictate a list</h2>' +
+      '<p class="hint">Talk it through however it comes out \u2014 Claude sorts it into ' +
+      'your sections and sets the marks. Tap the box, then use your keyboard\u2019s ' +
+      'microphone (<code>Win + H</code> on Windows, double-tap <code>Fn</code> on a Mac, ' +
+      'the \u{1F3A4} key on a phone). This one button is the only thing here that uses ' +
+      'Claude, and it spends your own usage.</p>' +
+      (state.dictError ? '<p class="hint caution">' + esc(state.dictError) + '</p>' : "") +
+      '<textarea class="copybox" id="dictbox" spellcheck="false" ' +
+        'placeholder="For Broadcom I need to review controls, that one\u2019s high priority, and email Marco\u2026" ' +
+        'aria-label="Dictate your tasks"></textarea>' +
+      (state.dictBusy
+        ? '<div class="thinking"><span class="spinner"></span>Sorting it into your sections\u2026</div>'
+        : "") +
+      '<div class="prow">' +
+        (state.dictBusy
+          ? '<button class="btn" data-act="dict-stop">Stop</button>'
+          : '<button class="btn" data-act="dict-run">Sort into my sheet</button>') +
+        '<button class="btn" data-act="close-panel">Cancel</button>' +
+      '</div>' +
+    '</div>';
+  }
+
   function importPanel(){
     var arming = state.confirm === "import-replace";
     return '<div class="panel">' +
@@ -1304,6 +1518,13 @@ input{font:inherit;color:inherit}
             ? "Synced to your Claude account — same sheet on every device."
             : "This browser only. Open the published link to sync across devices.") + '</div></div>' +
         '<span class="val">' + (store.kind === "cloud" ? "Synced" : "This device") + '</span>' +
+      '</div>' +
+      '<div class="field">' +
+        '<div><div class="k">Dictate a list</div>' +
+        '<div class="h">' + (state.sampler
+          ? "Talk it through and Claude sorts it into your sections. The only part of this app that uses Claude."
+          : "Not available in this view \u2014 open the published link while signed in.") + '</div></div>' +
+        (state.sampler ? '<button class="btn" data-act="dictate">Dictate\u2026</button>' : '<span class="val">off</span>') +
       '</div>' +
       '<div class="field">' +
         '<div><div class="k">Import a sheet</div>' +
@@ -1350,6 +1571,7 @@ input{font:inherit;color:inherit}
     if (state.panel === "settings") html += settingsPanel();
     if (state.panel === "copy") html += copyPanel();
     if (state.panel === "import") html += importPanel();
+    if (state.panel === "dictate") html += dictatePanel();
     document.getElementById("main").innerHTML = html;
 
     // restore the drafts a re-render would otherwise wipe
@@ -1360,6 +1582,12 @@ input{font:inherit;color:inherit}
 
     var ib = document.getElementById("importbox");
     if (ib) ib.value = state.importText;
+
+    var db = document.getElementById("dictbox");
+    if (db) db.value = state.dictText;
+
+    var dbtn = document.getElementById("btn-dictate");
+    if (dbtn) dbtn.hidden = !state.sampler;
 
     if (!state.focus && state.editing) state.focus = "edit-" + state.editing.id;
     if (state.focus){
@@ -1556,6 +1784,29 @@ input{font:inherit;color:inherit}
         break;
       }
 
+      case "dictate":
+        state.panel = state.panel === "dictate" ? null : "dictate";
+        closeTransient(); render();
+        break;
+
+      case "dict-run":
+        runDictation();
+        break;
+
+      case "dict-stop":
+        if (state.dictAbort) state.dictAbort.abort();
+        state.dictBusy = false;
+        render();
+        break;
+
+      case "dict-apply":
+        if (state.dictResult) applyParsed(state.dictResult);
+        break;
+
+      case "dict-back":
+        state.dictResult = null; render();
+        break;
+
       case "open-import":
         state.importText = state.importText || IMPORT_SAMPLE;
         state.panel = "import";
@@ -1662,6 +1913,7 @@ input{font:inherit;color:inherit}
       state.drafts[t.getAttribute("data-section")] = t.value;
     }
     if (t.id === "importbox") state.importText = t.value;
+    if (t.id === "dictbox") state.dictText = t.value;
   });
 
   document.addEventListener("change", function(e){
@@ -1741,6 +1993,13 @@ input{font:inherit;color:inherit}
   /* ============================ boot ============================ */
   function start(db){
     store = db ? cloudStore(db) : localStore();
+
+    if (window.claude && window.claude.use){
+      window.claude.use("sample").then(function(fn){
+        state.sampler = (fn && typeof fn.json === "function") ? fn : null;
+        render();
+      }, function(){});
+    }
 
     store.watchBoard(function(board){
       if (!board){

@@ -35,6 +35,12 @@ sheet, a checkbox per task, and whatever isn't finished carries to tomorrow.
   today's log, `!` marks it for today, and two leading spaces make a
   sub-line. The same prefixes work
   when typing a single line into a section.
+- **Dictate a list** — the one feature that uses Claude. Fill the box with
+  the device's own dictation (the page cannot reach a microphone from inside
+  the viewer frame), and Claude sorts a spoken run-on into sections with the
+  marks set, for review before anything is written. It spends the viewer's
+  own Claude usage and asks consent on first use; where the capability is
+  absent the button is hidden and the rest of the app is unaffected.
 - **Copy and print** — copy today's sheet (or the whole log) as plain text,
   or print the sheet with the interface stripped out.
 
@@ -81,6 +87,14 @@ Edit `app.html`, then:
 ```sh
 python3 daily-sheet/build.py
 ```
+
+## One artifact, one URL
+
+Publishing an update redeploys to the same address; the artifact has had a
+single URL since its first version. The database below is keyed to that
+artifact, not to a version, so data survives every republish. A *new* URL
+would be a different artifact with an empty database — which is why updates
+always go to this one.
 
 ## Storage
 
