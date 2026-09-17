@@ -658,7 +658,10 @@ input{font:inherit;color:inherit}
     var today = state.today;
     var names = ["CI", "a.k.a.", "Sunrun", "Broadcom", "HL", "GD", "Qualcomm", "Admin"];
     var secs = names.map(function(n, i){
-      return { id: uid(), name: n, color: PALETTE[i % PALETTE.length], collapsed: false };
+      return {
+        id: uid(), name: n, color: PALETTE[i % PALETTE.length],
+        collapsed: false, kind: n === "Admin" ? "other" : "client"
+      };
     });
     function t(i, text, kind, status, indent, flag, hi){
       return {
@@ -698,6 +701,10 @@ input{font:inherit;color:inherit}
   }
 
   /* ============================ derived ============================ */
+  /* A section is a client card unless it is explicitly marked general.
+     Sections predating this default to client, which is the common case. */
+  function isClient(sec){ return sec.kind !== "other"; }
+
   function tasksOf(sectionId){
     return state.board.tasks.filter(function(t){ return t.sectionId === sectionId; });
   }
@@ -855,8 +862,10 @@ input{font:inherit;color:inherit}
   function addSection(){
     var sec = {
       id: uid(),
-      name: "New Section",
-      color: PALETTE[state.board.sections.length % PALETTE.length]
+      name: "New Client",
+      color: PALETTE[state.board.sections.length % PALETTE.length],
+      collapsed: false,
+      kind: "client"
     };
     state.board.sections.push(sec);
     state.editing = { kind: "section", id: sec.id };
@@ -1028,6 +1037,9 @@ input{font:inherit;color:inherit}
     return '<div class="menu">' +
       '<button data-act="edit-section" data-id="' + esc(sec.id) + '">Rename</button>' +
       '<button data-act="toggle-section" data-id="' + esc(sec.id) + '">' + (sec.collapsed ? "Expand" : "Collapse") + '</button>' +
+      '<button data-act="seckind" data-id="' + esc(sec.id) + '" data-kind="' +
+        (isClient(sec) ? "other" : "client") + '">' +
+        (isClient(sec) ? "Not a client \u2014 general card" : "Make this a client card") + '</button>' +
       '<button data-act="move-section" data-id="' + esc(sec.id) + '" data-delta="-1">Move up</button>' +
       '<button data-act="move-section" data-id="' + esc(sec.id) + '" data-delta="1">Move down</button>' +
       '<div class="sep"></div><div class="lbl">Colour</div>' + swatches +
@@ -1420,12 +1432,21 @@ input{font:inherit;color:inherit}
   }
 
   function dictPrompt(text){
-    var names = state.board.sections.map(function(x){ return "- " + x.name; }).join("\n");
+    var clients = state.board.sections.filter(isClient)
+      .map(function(x){ return "- " + x.name; }).join("\n") || "  (none yet)";
+    var general = state.board.sections.filter(function(x){ return !isClient(x); })
+      .map(function(x){ return "- " + x.name; }).join("\n") || "  (none yet)";
+
     return [
       "Sort a spoken brain-dump into a daily task sheet.",
       "",
-      "The sheet already has these sections:",
-      names,
+      "The sheet holds ONE CARD PER CLIENT, plus a few general cards.",
+      "",
+      "Client cards that already exist:",
+      clients,
+      "",
+      "General (non-client) cards:",
+      general,
       "",
       "What was dictated (speech-to-text, so expect run-on sentences and",
       "mis-heard words \u2014 keep the speaker's own shorthand and abbreviations):",
@@ -1434,12 +1455,25 @@ input{font:inherit;color:inherit}
       '"""',
       "",
       "Reply with only a JSON array, one object per distinct task:",
-      '{"section": string, "text": string, "today": boolean, "high": boolean, "status": ""|"wip"|"waiting"}',
+      '{"section": string, "client": boolean, "text": string, "today": boolean,',
+      ' "high": boolean, "status": ""|"wip"|"waiting"}',
       "",
-      "Rules:",
-      "- section: one of the names above when it plainly fits; otherwise a new short name.",
-      "- text: the task itself, short and imperative. Do not invent tasks, and do not",
-      "  expand abbreviations or acronyms the speaker used.",
+      "Rules for section \u2014 read these carefully:",
+      "- If the task belongs to a client, section is THAT CLIENT'S OWN NAME and",
+      "  client is true. Two clients mentioned means two different sections.",
+      "- Reuse an existing client name above, spelled exactly as listed, whenever it",
+      "  is the same client (allow for speech-to-text mangling the spelling).",
+      "- A client with no card yet simply gets a new section named after them.",
+      "- NEVER file a client's work under a general card, and never invent a",
+      "  catch-all like \"Client Work\", \"Clients\", \"Work\" or \"Misc\".",
+      "- Only genuinely administrative or personal items go in a general card,",
+      "  with client false.",
+      "",
+      "Other rules:",
+      "- text: the task itself, short and imperative. The card already names the",
+      "  client, so do NOT repeat it in the text: \"AKA Brands: run the SDLC",
+      "  analysis\" becomes \"Run the SDLC analysis\". Do not invent tasks, and do",
+      "  not expand abbreviations or acronyms the speaker used.",
       "- today: true only if they said it is for today, this morning, now, or similar.",
       "- high: true only if they called it urgent, high priority, critical, or similar.",
       "- status: \"wip\" if already under way, \"waiting\" if blocked on another person,",
@@ -1496,7 +1530,8 @@ input{font:inherit;color:inherit}
       if (!sec){
         sec = {
           id: uid(), name: name,
-          color: PALETTE[b.sections.length % PALETTE.length], collapsed: false
+          color: PALETTE[b.sections.length % PALETTE.length], collapsed: false,
+          kind: it.client === false ? "other" : "client"
         };
         b.sections.push(sec);
       }
@@ -1532,7 +1567,10 @@ input{font:inherit;color:inherit}
       var isNew = !state.board.sections.some(function(x){
         return x.name.toLowerCase() === g.name.toLowerCase();
       });
-      return '<div class="revsec">' + esc(g.name) + (isNew ? " \u00B7 new section" : "") + '</div>' +
+      var label = isNew
+        ? (g.items[0] && g.items[0].client === false ? " \u00B7 new card" : " \u00B7 new client")
+        : "";
+      return '<div class="revsec">' + esc(g.name) + label + '</div>' +
         g.items.map(function(it){
           var marks =
             (it.high ? '<span class="s">\u2605</span>' : '<span>\u00A0</span>') +
@@ -1919,6 +1957,13 @@ input{font:inherit;color:inherit}
       case "status":
         closeTransient(); setField(id, "status", el.getAttribute("data-status"));
         break;
+
+      case "seckind": {
+        var ks = state.board.sections.find(function(x){ return x.id === id; });
+        if (ks) ks.kind = el.getAttribute("data-kind");
+        closeTransient(); commitBoard();
+        break;
+      }
 
       case "toggle-section": {
         var sc = state.board.sections.find(function(x){ return x.id === id; });

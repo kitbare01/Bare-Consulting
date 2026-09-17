@@ -5,8 +5,12 @@ sheet, a checkbox per task, and whatever isn't finished carries to tomorrow.
 
 ## What it does
 
-- **Sections** — one per client, plus admin. Rename, recolour, reorder,
-  collapse, delete.
+- **Sections** — one card per client, plus a few general cards for admin
+  and personal work. Rename, recolour, reorder, collapse, delete, and mark
+  a card as a client or as general. The distinction is not decorative:
+  dictation is told which cards are clients, so a task for a client gets
+  that client's own card, creating it when the client is new, instead of
+  landing in a catch-all.
 - **Marking a line for today** — on the paper sheet, drawing a checkbox
   beside an item is the commitment: it means *I intend to do this today*,
   as distinct from the running list around it. That mark is its own thing
