@@ -6,8 +6,11 @@ sheet, a checkbox per task, and whatever isn't finished carries to tomorrow.
 ## What it does
 
 - **Sections** — one card per client, plus a few general cards for admin
-  and personal work. Rename, recolour, reorder, collapse, delete, and mark
-  a card as a client or as general. The distinction is not decorative:
+  and personal work. Rename, recolour, collapse, delete, and set the card
+  type. Order is a rule rather than a preference: **Admin** first,
+  **Personal** last, everything else alphabetical between them, re-sorting
+  the moment a card is renamed or retyped — so there is nothing to drag and
+  no manual move. The client/general distinction is not decorative:
   dictation is told which cards are clients, so a task for a client gets
   that client's own card, creating it when the client is new, instead of
   landing in a catch-all.
@@ -54,10 +57,14 @@ sheet, a checkbox per task, and whatever isn't finished carries to tomorrow.
 Sections are cards laid into balanced columns: three on a laptop or a tablet
 held sideways (≥1150px), two at middling widths, one on a phone held
 upright. The columns are real elements rather than CSS multicol, so a menu
-opening inside one is never fragmented across the gap. The longest sections
-are placed first, each into whichever column is currently shortest, and each
-column is then restored to the sheet's own order — placing in source order
-lets one long section land last and leave every other column short.
+opening inside one is never fragmented across the gap.
+
+They read like a newspaper: down column one, then column two. Because the
+order is a rule, the split may only choose *where* to break between columns,
+never which card goes where — each card lands in the column its own midpoint
+falls into, and an outsized card that would strand a later column pushes its
+neighbours along instead. Balancing heights by reordering, which an earlier
+version did, makes "first" and "last" meaningless.
 
 ## Colour
 

@@ -271,6 +271,8 @@ input{font:inherit;color:inherit}
   color:var(--ink-3);padding:6px 9px 3px;
 }
 .menu .swatch{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.menu .tick{width:11px;flex-shrink:0;color:var(--accent);font-size:11px}
+.menu button[aria-current="true"]{color:var(--accent)}
 .menuwrap{position:relative}
 
 /* done cluster */
@@ -638,11 +640,13 @@ input{font:inherit;color:inherit}
 
   function seedBoard(){
     var today = state.today;
-    var names = ["CI", "a.k.a.", "Sunrun", "Broadcom", "HL", "GD", "Qualcomm", "Admin"];
+    var names = ["Admin", "CI", "a.k.a.", "Sunrun", "Broadcom", "HL",
+                 "GD", "Qualcomm", "Personal"];
     var secs = names.map(function(n, i){
+      var kind = n === "Admin" ? "admin" : (n === "Personal" ? "personal" : "client");
       return {
         id: uid(), name: n, color: PALETTE[i % PALETTE.length],
-        collapsed: false, kind: n === "Admin" ? "other" : "client"
+        collapsed: false, kind: kind
       };
     });
     function t(i, text, kind, status, indent, flag, hi){
@@ -657,16 +661,16 @@ input{font:inherit;color:inherit}
       settings: { dayStart: 4 },
       sections: secs,
       tasks: [
-        t(7, "Settings \u2192 Import a sheet: paste your whole list in at once",
+        t(0, "Settings \u2192 Import a sheet: paste your whole list in at once",
              null, null, 0, true),
-        t(7, "\u2605 and \u25B8 are independent \u2014 this line carries both",
+        t(0, "\u2605 and \u25B8 are independent \u2014 this line carries both",
              null, null, 0, true, true),
-        t(7, "\u25B8 puts a line on today's list", null, null, 0, true),
-        t(7, "\u2605 makes it high priority, on today's list or not",
+        t(0, "\u25B8 puts a line on today's list", null, null, 0, true),
+        t(0, "\u2605 makes it high priority, on today's list or not",
              null, null, 0, false, true),
-        t(7, "An unmarked line just sits here \u2014 the Today tab hides it"),
-        t(7, "Start a line with / to mark it under way", null, "wip"),
-        t(7, "Two leading spaces make a sub-line", null, null, 1)
+        t(0, "An unmarked line just sits here \u2014 the Today tab hides it"),
+        t(0, "Start a line with / to mark it under way", null, "wip"),
+        t(0, "Two leading spaces make a sub-line", null, null, 1)
       ]
     };
   }
@@ -683,9 +687,29 @@ input{font:inherit;color:inherit}
   }
 
   /* ============================ derived ============================ */
-  /* A section is a client card unless it is explicitly marked general.
-     Sections predating this default to client, which is the common case. */
-  function isClient(sec){ return sec.kind !== "other"; }
+  /* Card order is a rule, not a preference: Admin first, Personal last,
+     everything else alphabetical between them. Sections predating the kind
+     field default to client, which is the common case. */
+  var KINDS = [
+    { k: "admin",    label: "Admin \u2014 always first" },
+    { k: "client",   label: "Client" },
+    { k: "other",    label: "General" },
+    { k: "personal", label: "Personal \u2014 always last" }
+  ];
+  var KIND_RANK = { admin: 0, client: 1, other: 1, personal: 2 };
+
+  function kindOf(sec){ return sec.kind || "client"; }
+  function isClient(sec){ return kindOf(sec) === "client"; }
+
+  function orderedSections(){
+    return state.board.sections.slice().sort(function(a, b){
+      var ra = KIND_RANK[kindOf(a)], rb = KIND_RANK[kindOf(b)];
+      if (ra !== rb) return ra - rb;
+      return String(a.name).localeCompare(String(b.name), undefined, {
+        sensitivity: "base", numeric: true
+      });
+    });
+  }
 
   function tasksOf(sectionId){
     return state.board.tasks.filter(function(t){ return t.sectionId === sectionId; });
@@ -844,7 +868,7 @@ input{font:inherit;color:inherit}
   function addSection(){
     var sec = {
       id: uid(),
-      name: "New Client",
+      name: "New client",
       color: PALETTE[state.board.sections.length % PALETTE.length],
       collapsed: false,
       kind: "client"
@@ -852,15 +876,6 @@ input{font:inherit;color:inherit}
     state.board.sections.push(sec);
     state.editing = { kind: "section", id: sec.id };
     state.focus = "edit-" + sec.id;
-    commitBoard();
-  }
-
-  function moveSection(id, delta){
-    var list = state.board.sections;
-    var i = list.findIndex(function(s){ return s.id === id; });
-    var to = i + delta;
-    if (i < 0 || to < 0 || to >= list.length) return;
-    var tmp = list[i]; list[i] = list[to]; list[to] = tmp;
     commitBoard();
   }
 
@@ -955,7 +970,7 @@ input{font:inherit;color:inherit}
         '<button data-act="close-menu">Keep it</button>' +
       '</div>';
     }
-    var others = state.board.sections.filter(function(s){ return s.id !== task.sectionId; });
+    var others = orderedSections().filter(function(s){ return s.id !== task.sectionId; });
     var moves = others.map(function(s){
       return '<button data-act="retarget" data-id="' + esc(task.id) + '" data-section="' + esc(s.id) + '">' +
         '<span class="swatch" style="background:' + esc(s.color) + '"></span>' + esc(s.name) + '</button>';
@@ -1019,11 +1034,13 @@ input{font:inherit;color:inherit}
     return '<div class="menu">' +
       '<button data-act="edit-section" data-id="' + esc(sec.id) + '">Rename</button>' +
       '<button data-act="toggle-section" data-id="' + esc(sec.id) + '">' + (sec.collapsed ? "Expand" : "Collapse") + '</button>' +
-      '<button data-act="seckind" data-id="' + esc(sec.id) + '" data-kind="' +
-        (isClient(sec) ? "other" : "client") + '">' +
-        (isClient(sec) ? "Not a client \u2014 general card" : "Make this a client card") + '</button>' +
-      '<button data-act="move-section" data-id="' + esc(sec.id) + '" data-delta="-1">Move up</button>' +
-      '<button data-act="move-section" data-id="' + esc(sec.id) + '" data-delta="1">Move down</button>' +
+      '<div class="sep"></div><div class="lbl">Card type</div>' +
+      KINDS.map(function(o){
+        var on = kindOf(sec) === o.k;
+        return '<button data-act="seckind" data-id="' + esc(sec.id) +
+          '" data-kind="' + o.k + '"' + (on ? ' aria-current="true"' : "") + '>' +
+          '<span class="tick">' + (on ? "\u2713" : "") + '</span>' + esc(o.label) + '</button>';
+      }).join("") +
       '<div class="sep"></div><div class="lbl">Colour</div>' + swatches +
       '<div class="sep"></div>' +
       '<button class="danger" data-act="ask-delete" data-id="' + esc(sec.id) + '">Delete section</button>' +
@@ -1094,34 +1111,38 @@ input{font:inherit;color:inherit}
     return 3 + lines.length + doneOf(sec.id).length;
   }
 
-  /* Place the longest sections first, each into whichever column is
-     currently shortest - placing in source order lets one long section land
-     last and leave every other column short. Each column is then put back
-     into the sheet's own order, so the arrangement still reads as yours. */
+  /* Columns read like a newspaper: down column one, then column two. Order
+     is the rule (Admin first, Personal last), so the split can only choose
+     WHERE to break between columns, never which section goes where - each
+     section lands in the column its own midpoint falls into. */
   function distribute(secs, n, focus){
-    var cols = [], load = [], i;
-    for (i = 0; i < n; i++){ cols.push([]); load.push(0); }
+    var cols = [], i;
+    for (i = 0; i < n; i++) cols.push([]);
+    if (n === 1 || !secs.length) return n === 1 ? [secs.slice()] : cols;
 
-    var rank = {};
-    secs.forEach(function(sec, idx){ rank[sec.id] = idx; });
+    var weights = secs.map(function(sec){ return sectionWeight(sec, focus); });
+    var total = weights.reduce(function(a, b){ return a + b; }, 0) || secs.length;
 
-    secs.slice()
-      .sort(function(a, b){ return sectionWeight(b, focus) - sectionWeight(a, focus); })
-      .forEach(function(sec){
-        var k = 0;
-        for (var j = 1; j < n; j++) if (load[j] < load[k]) k = j;
-        cols[k].push(sec);
-        load[k] += sectionWeight(sec, focus);
-      });
-
-    cols.forEach(function(col){
-      col.sort(function(a, b){ return rank[a.id] - rank[b.id]; });
+    var acc = 0;
+    secs.forEach(function(sec, idx){
+      var mid = acc + weights[idx] / 2;
+      var col = Math.min(n - 1, Math.floor((mid / total) * n));
+      cols[col].push(sec);
+      acc += weights[idx];
     });
+
+    /* One outsized section can leave a later column empty; push sections
+       along until none is, which keeps the reading order intact. */
+    for (i = n - 1; i > 0; i--){
+      while (!cols[i].length && cols[i - 1].length > 1){
+        cols[i].unshift(cols[i - 1].pop());
+      }
+    }
     return cols;
   }
 
   function sheetView(focus){
-    var secs = state.board.sections;
+    var secs = orderedSections();
     var strays = [];
 
     if (focus){
@@ -1414,9 +1435,10 @@ input{font:inherit;color:inherit}
   }
 
   function dictPrompt(text){
-    var clients = state.board.sections.filter(isClient)
+    var ordered = orderedSections();
+    var clients = ordered.filter(isClient)
       .map(function(x){ return "- " + x.name; }).join("\n") || "  (none yet)";
-    var general = state.board.sections.filter(function(x){ return !isClient(x); })
+    var general = ordered.filter(function(x){ return !isClient(x); })
       .map(function(x){ return "- " + x.name; }).join("\n") || "  (none yet)";
 
     return [
@@ -1781,7 +1803,7 @@ input{font:inherit;color:inherit}
   /* ============================ text export ============================ */
   function todayAsText(){
     var lines = ["Daily Sheet — " + fmtLong(state.today), ""];
-    state.board.sections.forEach(function(sec){
+    orderedSections().forEach(function(sec){
       var open = tasksOf(sec.id), done = doneOf(sec.id);
       if (!open.length && !done.length) return;
       lines.push(sec.name.toUpperCase());
@@ -2018,10 +2040,6 @@ input{font:inherit;color:inherit}
 
       case "delete-task":
         closeTransient(); deleteTask(id);
-        break;
-
-      case "move-section":
-        closeTransient(); moveSection(id, +el.getAttribute("data-delta"));
         break;
 
       case "delete-section":
