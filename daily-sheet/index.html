@@ -82,6 +82,7 @@ input{font:inherit;color:inherit}
 }
 .tally b{font-weight:500;color:var(--ink)}
 .tally .warn{color:var(--alert)}
+.tally .hot b,.tally .hot{color:var(--accent)}
 .tools{display:flex;align-items:center;gap:6px;flex-shrink:0}
 .tabs{display:flex;background:var(--paper);border:1px solid var(--rule);border-radius:9px;padding:2px}
 .tab{
@@ -110,7 +111,7 @@ input{font:inherit;color:inherit}
 .dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
 .secname{
   font-family:var(--font-mono);font-size:11.5px;font-weight:500;
-  letter-spacing:.1em;text-transform:uppercase;color:var(--accent);
+  letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2);
   min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
 }
 .seccount{font-family:var(--font-mono);font-size:11px;color:var(--ink-3);margin-left:auto;flex-shrink:0}
@@ -208,6 +209,15 @@ input{font:inherit;color:inherit}
 .sheet.focus .row.flag:not(.late):not(.overdue){background:transparent}
 .sheet.focus .row.flag:not(.late):not(.overdue):hover{background:var(--sheet-2)}
 .sheet.focus .row.flag:not(.late):not(.overdue)::before{display:none}
+.row.flag.hi{background:color-mix(in srgb,var(--accent) 13%,transparent)}
+.row.flag.hi:hover{background:color-mix(in srgb,var(--accent) 19%,transparent)}
+.row.flag.hi::before{background:var(--accent);width:4px}
+.row.flag.hi .box button{border-color:var(--accent)}
+.row.flag.hi .text{font-weight:600}
+.flagbtn.on.hi{color:var(--accent)}
+.flagbtn.on.hi svg{width:15px}
+.sheet.focus .row.flag.hi{background:color-mix(in srgb,var(--accent) 13%,transparent)}
+.sheet.focus .row.flag.hi::before{display:block}
 .row.flag.late::before{background:var(--warn)}
 .row.flag.overdue::before{background:var(--alert)}
 .row.flag .box button{border-color:var(--prio);border-width:2px}
@@ -229,15 +239,15 @@ input{font:inherit;color:inherit}
 .row.note .box{visibility:hidden}
 .row.note .text{color:var(--ink-2);font-size:13.5px}
 .row.ind .box{margin-left:24px}
-.row.wip .box button{border-color:var(--accent)}
+.row.wip .box button{border-color:var(--ink-2)}
 .row.wip .box button::after{
   content:"";width:11px;height:1.8px;border-radius:2px;
-  background:var(--accent);transform:rotate(-45deg);
+  background:var(--ink-2);transform:rotate(-45deg);
 }
 .chip{
   font-family:var(--font-mono);font-size:10px;letter-spacing:.03em;
   padding:2px 6px;border-radius:3px;white-space:nowrap;
-  background:var(--accent-soft);color:var(--accent);
+  background:var(--accent-soft);color:var(--ink-2);
 }
 .chip.waiting{background:var(--warn-soft);color:var(--warn)}
 .sectoggle{
@@ -407,6 +417,7 @@ input{font:inherit;color:inherit}
     grip :'<svg viewBox="0 0 10 14"><circle cx="2" cy="2" r="1.3"/><circle cx="8" cy="2" r="1.3"/><circle cx="2" cy="7" r="1.3"/><circle cx="8" cy="7" r="1.3"/><circle cx="2" cy="12" r="1.3"/><circle cx="8" cy="12" r="1.3"/></svg>',
     flagOn :'<svg viewBox="0 0 12 12"><path d="M3 1.4 10.2 6 3 10.6z" fill="currentColor"/></svg>',
     flagOff:'<svg viewBox="0 0 12 12"><path d="M3 1.4 10.2 6 3 10.6z" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>',
+    flagHi :'<svg viewBox="0 0 14 12"><path d="M1 1.4 7.1 6 1 10.6z" fill="currentColor"/><path d="M6.7 1.4 12.8 6 6.7 10.6z" fill="currentColor"/></svg>',
     caret:'<svg viewBox="0 0 10 10"><path d="M1 3h8L5 8z"/></svg>',
     undo :'<svg viewBox="0 0 24 24"><path d="M3 10h11a5 5 0 0 1 0 10h-3"/><path d="M7 6 3 10l4 4"/></svg>'
   };
@@ -457,8 +468,13 @@ input{font:inherit;color:inherit}
     var indent = /^(\s\s|\t)/.test(raw) ? 1 : 0;
     var text = String(raw).replace(/^\s+/, "");
     var kind = "task", status = "", done = false, flag = false;
-    var bang = text.match(/^!\s*/);
-    if (bang){ flag = true; text = text.slice(bang[0].length); }
+    var hi = false;
+    var bang = text.match(/^(!!?)\s*/);
+    if (bang){
+      flag = true;
+      hi = bang[1] === "!!";
+      text = text.slice(bang[0].length);
+    }
     var m = text.match(/^([-*\u2013\u2014\/x\u00d7\u2713])\s+/i);
     if (m){
       var c = m[1].toLowerCase();
@@ -468,7 +484,7 @@ input{font:inherit;color:inherit}
       text = text.slice(m[0].length);
     }
     return { text: text.trim(), kind: kind, status: status,
-             indent: indent, done: done, flag: flag };
+             indent: indent, done: done, flag: flag, hi: hi };
   }
 
   /* ============================ storage ============================ */
@@ -582,11 +598,11 @@ input{font:inherit;color:inherit}
     var secs = names.map(function(n, i){
       return { id: uid(), name: n, color: PALETTE[i % PALETTE.length], collapsed: false };
     });
-    function t(i, text, kind, status, indent, flag){
+    function t(i, text, kind, status, indent, flag, hi){
       return {
         id: uid(), sectionId: secs[i].id, text: text, created: today,
         kind: kind || "task", status: status || "", indent: indent || 0,
-        flag: flag ? today : ""
+        flag: flag ? today : "", hi: !!hi
       };
     }
     return {
@@ -596,6 +612,8 @@ input{font:inherit;color:inherit}
       tasks: [
         t(7, "Settings \u2192 Import a sheet: paste your whole list in at once",
              null, null, 0, true),
+        t(7, "Click the \u25B8 again to raise a line to high priority",
+             null, null, 0, true, true),
         t(7, "Click the \u25B8 on the right to mark a line for today",
              null, null, 0, true),
         t(7, "Unmarked lines just sit on the list \u2014 the Today tab hides them"),
@@ -646,6 +664,7 @@ input{font:inherit;color:inherit}
     return {
       open: work.length,
       flagged: work.filter(function(t){ return !!t.flag; }).length,
+      high: work.filter(function(t){ return !!t.flag && !!t.hi; }).length,
       done: ((state.day && state.day.items) || []).length,
       wip: work.filter(function(t){ return t.status === "wip"; }).length,
       carried: work.filter(function(t){ return ageOf(t) > 0; }).length,
@@ -664,7 +683,8 @@ input{font:inherit;color:inherit}
     var task = {
       id: uid(), sectionId: sectionId, text: p.text, created: state.today,
       kind: p.kind, status: p.status, indent: p.indent,
-      flag: p.flag ? state.today : ""
+      flag: p.flag ? state.today : "",
+      hi: !!p.hi
     };
     state.board.tasks.splice(idx + 1, 0, task);
     state.drafts[sectionId] = "";
@@ -693,7 +713,7 @@ input{font:inherit;color:inherit}
       sectionName: sec ? sec.name : "Unfiled",
       color: sec ? sec.color : PALETTE[4],
       created: task.created, doneAt: Date.now(), age: ageOf(task),
-      flag: task.flag || ""
+      flag: task.flag || "", hi: !!task.hi
     });
     state.board.tasks.splice(i, 1);
     state.board.updated = Date.now();
@@ -715,7 +735,8 @@ input{font:inherit;color:inherit}
       kind: item.kind || "task",
       status: item.status || "",
       indent: item.indent || 0,
-      flag: item.flag || ""
+      flag: item.flag || "",
+      hi: !!item.hi
     });
     var items = state.day.items.slice();
     items.splice(i, 1);
@@ -820,7 +841,7 @@ input{font:inherit;color:inherit}
       (isNote ? " note" : "") +
       (task.indent ? " ind" : "") +
       (task.status === "wip" ? " wip" : "") +
-      (task.flag ? " flag" + flagClass(task) : "");
+      (task.flag ? " flag" + (task.hi ? " hi" : "") + flagClass(task) : "");
 
     var body = editing
       ? '<input class="textedit" id="edit-' + esc(task.id) + '" data-id="' + esc(task.id) +
@@ -853,14 +874,21 @@ input{font:inherit;color:inherit}
 
   function flagButton(task){
     var n = flagAge(task);
-    var label = n < 0
-      ? "Flag for today"
-      : (n === 0 ? "Flagged for today \u2014 click to clear"
-                 : "Flagged " + plural(n, "day", "days") + " ago, still open");
-    return '<button class="flagbtn' + (n < 0 ? "" : " on" + flagClass(task)) +
-      '" data-act="flag" data-id="' + esc(task.id) + '" title="' + esc(label) +
-      '" aria-pressed="' + (n < 0 ? "false" : "true") + '" aria-label="' + esc(label) + '">' +
-      (n < 0 ? ICON.flagOff : ICON.flagOn) + '</button>';
+    var age = n > 0 ? " \u2014 marked " + plural(n, "day", "days") + " ago" : "";
+    var label, icon, cls;
+
+    if (n < 0){
+      label = "Mark for today"; icon = ICON.flagOff; cls = "";
+    } else if (task.hi){
+      label = "High priority" + age + " \u2014 click to clear";
+      icon = ICON.flagHi; cls = " on hi";
+    } else {
+      label = "On today's list" + age + " \u2014 click to raise to high priority";
+      icon = ICON.flagOn; cls = " on" + flagClass(task);
+    }
+
+    return '<button class="flagbtn' + cls + '" data-act="flag" data-id="' + esc(task.id) +
+      '" title="' + esc(label) + '" aria-label="' + esc(label) + '">' + icon + '</button>';
   }
 
   function taskMenu(task){
@@ -885,8 +913,16 @@ input{font:inherit;color:inherit}
     );
     return '<div class="menu">' +
       (isNote ? "" :
-        '<button data-act="flag" data-id="' + esc(task.id) + '">' +
-          (task.flag ? "Take off today" : "Flag for today") + '</button>') +
+        (task.flag && task.hi ? "" :
+          '<button data-act="flag" data-id="' + esc(task.id) + '" data-level="high">' +
+            '<span class="swatch" style="background:var(--accent)"></span>High priority</button>') +
+        (task.flag && !task.hi ? "" :
+          '<button data-act="flag" data-id="' + esc(task.id) + '" data-level="today">' +
+            '<span class="swatch" style="background:var(--prio)"></span>On today\u2019s list</button>') +
+        (task.flag
+          ? '<button data-act="flag" data-id="' + esc(task.id) + '" data-level="">Take off today</button>'
+          : "") +
+        '<div class="sep"></div>') +
       '<button data-act="edit-task" data-id="' + esc(task.id) + '">Edit text</button>' +
       statusRow +
       '<button data-act="kind" data-id="' + esc(task.id) + '" data-kind="' + (isNote ? "task" : "note") + '">' +
@@ -940,7 +976,11 @@ input{font:inherit;color:inherit}
 
   function sectionBlock(sec, focus){
     var all = tasksOf(sec.id);
-    var lines = focus ? all.filter(function(t){ return !!t.flag; }) : all;
+    var lines = all;
+    if (focus){
+      lines = all.filter(function(t){ return !!t.flag; })
+                 .sort(function(a, b){ return (b.hi ? 1 : 0) - (a.hi ? 1 : 0); });
+    }
     var work = all.filter(function(t){ return t.kind !== "note"; });
     var flagged = work.filter(function(t){ return !!t.flag; });
     var done = doneOf(sec.id);
@@ -1147,7 +1187,8 @@ input{font:inherit;color:inherit}
           b.tasks.push({
             id: uid(), sectionId: sec.id, text: line.text, created: state.today,
             kind: line.kind, status: line.status, indent: line.indent,
-            flag: line.flag ? state.today : ""
+            flag: line.flag ? state.today : "",
+            hi: !!line.hi
           });
         }
       });
@@ -1169,7 +1210,7 @@ input{font:inherit;color:inherit}
       '<h2>Import a sheet</h2>' +
       '<p class="hint">Each <code>#</code> line starts a section. A plain line is a task; ' +
       '<code>/</code> marks one in progress, <code>-</code> makes a note with no checkbox, ' +
-      '<code>x</code> files it straight into today\u2019s log, <code>!</code> marks it for today, ' +
+      '<code>x</code> files it straight into today\u2019s log, <code>!</code> marks it for today and <code>!!</code> makes it high priority, ' +
       'and two leading spaces make a sub-line. ' +
       'A section name that already exists is added to rather than duplicated.</p>' +
       '<p class="hint caution">What follows is a rough read of your paper sheet \u2014 ' +
@@ -1233,6 +1274,7 @@ input{font:inherit;color:inherit}
     var c = counts();
     document.getElementById("dateline").textContent = fmtLong(state.today);
     document.getElementById("tally").innerHTML =
+      (c.high ? '<span class="hot"><b>' + c.high + '</b> high</span>' : "") +
       '<span><b>' + c.flagged + '</b> for today</span>' +
       '<span><b>' + c.done + '</b> done</span>' +
       (c.wip ? '<span><b>' + c.wip + '</b> in prog</span>' : "") +
@@ -1298,7 +1340,7 @@ input{font:inherit;color:inherit}
         if (t.kind === "note"){ lines.push(tab + "  - " + t.text); return; }
         var n = ageOf(t);
         lines.push(
-          tab + (t.flag ? "\u25B8 " : "  ") +
+          tab + (t.flag ? (t.hi ? "\u25B8\u25B8" : "\u25B8 ") : "  ") + " " +
           (t.status === "wip" ? "[/] " : "[ ] ") + t.text +
           (t.status === "waiting" ? "   (waiting)" : "") +
           (n ? "   (" + n + "d)" : "")
@@ -1423,7 +1465,15 @@ input{font:inherit;color:inherit}
 
       case "flag": {
         var ft = state.board.tasks.find(function(x){ return x.id === id; });
-        if (ft) ft.flag = ft.flag ? "" : state.today;
+        if (ft){
+          var want = el.getAttribute("data-level");
+          if (want === null){
+            // the marker itself cycles: nothing -> today -> high -> nothing
+            want = !ft.flag ? "today" : (ft.hi ? "" : "high");
+          }
+          ft.flag = want ? (ft.flag || state.today) : "";
+          ft.hi = want === "high";
+        }
         closeTransient(); commitBoard();
         break;
       }

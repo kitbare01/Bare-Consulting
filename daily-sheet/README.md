@@ -10,8 +10,9 @@ sheet, a checkbox per task, and whatever isn't finished carries to tomorrow.
 - **Marking a line for today** — on the paper sheet, drawing a checkbox
   beside an item is the commitment: it means *I intend to do this today*,
   as distinct from the running list around it. That mark is its own thing
-  here, the `▸` on each line. Marked lines carry a rail down the left
-  edge on the full sheet, and the **Today** tab shows only them. A line
+  here, the `▸` on each line, which cycles: nothing, on today's list,
+  high priority. Marked lines carry a rail down the left edge on the full
+  sheet, and the **Today** tab shows only them, high priority first. A line
   still marked days later says so, in amber and then red.
 - **Every line is checkable**, and can carry an *in prog* or *waiting*
   status. A line can also be demoted to a note, which drops its checkbox and
@@ -43,10 +44,12 @@ than saturated gold, which is legible but tiring down a long list; full UCLA
 gold (`#FFC72C`, 8.8:1) carries the structure — the date, section names,
 focus rings, in-progress marks.
 
-Priority is deliberately outside that pairing. A line marked for today takes
-a cyan rail and checkbox (`#4DD0E1`, 7.5:1) — the one non-UCLA hue in the
-app, so it cannot be confused with the gold that is everywhere else. Gold
-then escalates an ageing mark, and a soft red is held for a week stale.
+Priority reads on two levels. A line on today's list takes a cyan rail and
+checkbox (`#4DD0E1`, 7.5:1), the one non-UCLA hue in the app. High priority
+takes full UCLA gold with a wider rail and bolder text, which is why gold is
+kept off the section names — reserving the brightest colour for the few
+lines that have to happen makes it mean something. Gold also escalates an
+ageing mark, and a soft red is held for a week stale.
 
 Every foreground/background pair clears WCAG AA; the weakest is a secondary
 count at 5.3:1 and body text sits at 11.1:1. Printing overrides the whole
