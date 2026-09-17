@@ -35,12 +35,13 @@ sheet, a checkbox per task, and whatever isn't finished carries to tomorrow.
   today's log, `!` marks it for today, and two leading spaces make a
   sub-line. The same prefixes work
   when typing a single line into a section.
-- **Dictate a list** — the one feature that uses Claude. Fill the box with
-  the device's own dictation (the page cannot reach a microphone from inside
-  the viewer frame), and Claude sorts a spoken run-on into sections with the
-  marks set, for review before anything is written. It spends the viewer's
-  own Claude usage and asks consent on first use; where the capability is
-  absent the button is hidden and the rest of the app is unaffected.
+- **Dictate a list** — the one feature that uses Claude. Get words into the
+  box by pasting, by the browser's own recogniser where the frame allows a
+  microphone, or by the OS dictation key; Claude then sorts the run-on into
+  sections with the marks set, for review before anything is written. It
+  spends the viewer's own Claude usage and asks consent on first use; where
+  the capability is absent the button is hidden and the rest of the app is
+  unaffected.
 - **Copy and print** — copy today's sheet (or the whole log) as plain text,
   or print the sheet with the interface stripped out.
 
@@ -73,6 +74,15 @@ ageing mark, and a soft red is held for a week stale.
 Every foreground/background pair clears WCAG AA; the weakest is a secondary
 count at 5.3:1 and body text sits at 11.1:1. Printing overrides the whole
 palette to black on white.
+
+## Panels and focus
+
+Panels render into their own container, rebuilt only when their own state
+changes, rather than into `#main` alongside the sheet. `#main` is replaced
+wholesale on every render, and a sync snapshot arriving mid-sentence would
+otherwise tear the textarea out from under whatever was typing into it —
+which is precisely what dictation is. The box also takes focus when the
+panel opens and keeps its caret across a rebuild.
 
 ## Files
 

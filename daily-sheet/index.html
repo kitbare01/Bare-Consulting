@@ -388,6 +388,13 @@ input{font:inherit;color:inherit}
   display:flex;align-items:center;gap:9px;padding:14px 0 4px;
   color:var(--ink-2);font-size:13.5px;
 }
+.pulse{
+  width:9px;height:9px;border-radius:50%;background:var(--alert);flex-shrink:0;
+  animation:pulse 1.1s ease-in-out infinite;
+}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.7)}}
+@media (prefers-reduced-motion:reduce){.pulse{animation:none}}
+.btn.live{border-color:var(--alert);color:var(--alert)}
 .spinner{
   width:13px;height:13px;border:2px solid var(--rule);border-top-color:var(--accent);
   border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0;
@@ -447,6 +454,7 @@ input{font:inherit;color:inherit}
 
 <div class="wrap">
   <div id="main"></div>
+  <div id="panels"></div>
 </div>
 
 <script>
@@ -639,6 +647,9 @@ input{font:inherit;color:inherit}
     dictResult: null,   // what Claude made of it, pending review
     dictError: "",
     sampler: null,      // the sample capability, when this view has it
+    panelKey: "",       // what the open panel was last built from
+    listening: false,   // in-page microphone running
+    micBlocked: false,  // this frame cannot reach a microphone
     focus: null,        // element id to restore focus to
     dragId: null
   };
@@ -1329,6 +1340,85 @@ input{font:inherit;color:inherit}
     cancelled: ""
   };
 
+  /* The viewer frame may or may not delegate microphone permission. Try the
+     browser's own recogniser; if the frame refuses, say so once, hide the
+     button, and leave the paste route in place. */
+  var SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+  var recog = null;
+
+  function stopListening(){
+    state.listening = false;
+    if (recog){ try { recog.stop(); } catch (e){} }
+  }
+
+  function startListening(){
+    if (!SpeechRec || state.micBlocked) return;
+    var settled = "";
+
+    try {
+      recog = new SpeechRec();
+    } catch (e){
+      state.micBlocked = true;
+      state.dictError = "This browser won't start a microphone here.";
+      render(); return;
+    }
+
+    recog.continuous = true;
+    recog.interimResults = true;
+    recog.lang = navigator.language || "en-US";
+
+    recog.onstart = function(){
+      settled = state.dictText;
+      state.listening = true;
+      state.dictError = "";
+      render();
+    };
+
+    recog.onresult = function(ev){
+      var done = "", saying = "";
+      for (var i = ev.resultIndex; i < ev.results.length; i++){
+        var r = ev.results[i];
+        if (r.isFinal) done += r[0].transcript;
+        else saying += r[0].transcript;
+      }
+      if (done) settled = (settled + " " + done).replace(/\s+/g, " ").trim();
+      state.dictText = (settled + (saying ? " " + saying : "")).trim();
+      var el = document.getElementById("dictbox");
+      if (el){ el.value = state.dictText; el.scrollTop = el.scrollHeight; }
+    };
+
+    recog.onerror = function(ev){
+      var kind = ev && ev.error;
+      state.listening = false;
+      if (kind === "not-allowed" || kind === "service-not-allowed"){
+        state.micBlocked = true;
+        state.dictError = "This page can't reach your microphone \u2014 Claude's " +
+          "viewer doesn't hand it through. Dictate into Notes, Word, or a text " +
+          "message and paste it here instead.";
+      } else if (kind === "no-speech"){
+        state.dictError = "Didn't catch anything that time.";
+      } else if (kind === "aborted"){
+        state.dictError = "";
+      } else {
+        state.dictError = "The microphone stopped (" + String(kind || "unknown") + ").";
+      }
+      render();
+    };
+
+    recog.onend = function(){
+      if (state.listening){ state.listening = false; render(); }
+    };
+
+    try {
+      recog.start();
+    } catch (e){
+      state.micBlocked = true;
+      state.dictError = "This page can't reach your microphone here. Paste the " +
+        "text in instead, or dictate to Claude in a chat.";
+      render();
+    }
+  }
+
   function dictPrompt(text){
     var names = state.board.sections.map(function(x){ return "- " + x.name; }).join("\n");
     return [
@@ -1472,24 +1562,36 @@ input{font:inherit;color:inherit}
       '</div>';
     }
 
+    var canListen = !!SpeechRec && !state.micBlocked;
+
     return '<div class="panel">' +
       '<h2>Dictate a list</h2>' +
-      '<p class="hint">Talk it through however it comes out \u2014 Claude sorts it into ' +
-      'your sections and sets the marks. Tap the box, then use your keyboard\u2019s ' +
-      'microphone (<code>Win + H</code> on Windows, double-tap <code>Fn</code> on a Mac, ' +
-      'the \u{1F3A4} key on a phone). This one button is the only thing here that uses ' +
-      'Claude, and it spends your own usage.</p>' +
+      '<p class="hint">Get the words into the box any way you like, then let ' +
+      'Claude sort them into your sections. <b>Pasting always works</b> \u2014 ' +
+      'dictate into Notes, Word or a text message and paste it here. ' +
+      (canListen ? 'The <b>Start talking</b> button may work too, depending on ' +
+        'whether this frame is allowed a microphone. ' : "") +
+      'Your keyboard\u2019s own dictation (<code>Win + H</code>, double-tap ' +
+      '<code>Fn</code> on a Mac) is unreliable inside an embedded page.</p>' +
       (state.dictError ? '<p class="hint caution">' + esc(state.dictError) + '</p>' : "") +
       '<textarea class="copybox" id="dictbox" spellcheck="false" ' +
         'placeholder="For Broadcom I need to review controls, that one\u2019s high priority, and email Marco\u2026" ' +
-        'aria-label="Dictate your tasks"></textarea>' +
+        'aria-label="Dictate or paste your tasks"></textarea>' +
+      (state.listening
+        ? '<div class="thinking"><span class="pulse"></span>Listening \u2014 talk away.</div>'
+        : "") +
       (state.dictBusy
         ? '<div class="thinking"><span class="spinner"></span>Sorting it into your sections\u2026</div>'
         : "") +
       '<div class="prow">' +
+        (canListen
+          ? '<button class="btn' + (state.listening ? " live" : "") + '" data-act="listen">' +
+              (state.listening ? "Stop talking" : "\u{1F3A4} Start talking") + '</button>'
+          : "") +
         (state.dictBusy
           ? '<button class="btn" data-act="dict-stop">Stop</button>'
           : '<button class="btn" data-act="dict-run">Sort into my sheet</button>') +
+        '<button class="btn" data-act="dict-clear">Clear</button>' +
         '<button class="btn" data-act="close-panel">Cancel</button>' +
       '</div>' +
     '</div>';
@@ -1585,24 +1687,38 @@ input{font:inherit;color:inherit}
         .setAttribute("aria-selected", state.view === v ? "true" : "false");
     });
 
-    var html = state.view === "log" ? logView() : sheetView(state.view === "today");
-    if (state.panel === "settings") html += settingsPanel();
-    if (state.panel === "copy") html += copyPanel();
-    if (state.panel === "import") html += importPanel();
-    if (state.panel === "dictate") html += dictatePanel();
-    document.getElementById("main").innerHTML = html;
+    document.getElementById("main").innerHTML =
+      state.view === "log" ? logView() : sheetView(state.view === "today");
+
+    /* Panels are rebuilt only when their own state changes. Rebuilding them
+       on every render tore the textarea out from under whatever was typing
+       into it - which is exactly what dictation is. */
+    var key = [state.panel, state.dictBusy, state.dictError, state.confirm,
+               state.listening, state.micBlocked,
+               state.dictResult ? state.dictResult.length : -1].join("|");
+    if (key !== state.panelKey){
+      state.panelKey = key;
+      var pane = "";
+      if (state.panel === "settings") pane = settingsPanel();
+      if (state.panel === "copy") pane = copyPanel();
+      if (state.panel === "import") pane = importPanel();
+      if (state.panel === "dictate") pane = dictatePanel();
+      document.getElementById("panels").innerHTML = pane;
+
+      var ib = document.getElementById("importbox");
+      if (ib) ib.value = state.importText;
+      var dx = document.getElementById("dictbox");
+      if (dx){
+        dx.value = state.dictText;
+        if (state.panel === "dictate" && !state.dictResult) focusEnd(dx);
+      }
+    }
 
     // restore the drafts a re-render would otherwise wipe
     state.board.sections.forEach(function(sec){
       var el = document.getElementById("add-" + sec.id);
       if (el) el.value = state.drafts[sec.id] || "";
     });
-
-    var ib = document.getElementById("importbox");
-    if (ib) ib.value = state.importText;
-
-    var db = document.getElementById("dictbox");
-    if (db) db.value = state.dictText;
 
     var dbtn = document.getElementById("btn-dictate");
     if (dbtn) dbtn.hidden = !state.sampler;
@@ -1618,6 +1734,14 @@ input{font:inherit;color:inherit}
         }
       }
     }
+  }
+
+  function focusEnd(el){
+    try {
+      el.focus({ preventScroll: true });
+      var n = el.value.length;
+      if (el.setSelectionRange) el.setSelectionRange(n, n);
+    } catch (e){}
   }
 
   var toastTimer = null;
@@ -1715,6 +1839,7 @@ input{font:inherit;color:inherit}
         break;
 
       case "close-panel":
+        stopListening();
         state.panel = null; render();
         break;
 
@@ -1803,11 +1928,25 @@ input{font:inherit;color:inherit}
       }
 
       case "dictate":
-        state.panel = state.panel === "dictate" ? null : "dictate";
+        if (state.panel === "dictate"){ stopListening(); state.panel = null; }
+        else { state.panel = "dictate"; state.dictError = ""; }
         closeTransient(); render();
         break;
 
+      case "listen":
+        if (state.listening) stopListening(); else startListening();
+        break;
+
+      case "dict-clear":
+        stopListening();
+        state.dictText = "";
+        state.dictError = "";
+        state.panelKey = "";
+        render();
+        break;
+
       case "dict-run":
+        stopListening();
         runDictation();
         break;
 
