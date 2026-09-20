@@ -64,6 +64,7 @@ body{
 .grid.c4{ grid-template-columns:repeat(4,1fr); gap:2.2mm; --datew:10mm; }
 .grid.r3{ grid-template-rows:repeat(3,1fr); }
 .grid.r4{ grid-template-rows:repeat(4,1fr); }
+.grid.r6{ grid-template-rows:repeat(6,1fr); }
 .grid.flowcol{ grid-auto-flow:column; }
 
 .card{
@@ -73,7 +74,8 @@ body{
   display:flex; flex-direction:column; min-height:0; min-width:0;
 }
 .grid.c4 .card{ padding:1.4mm 1.8mm 1.2mm; }
-.card.tall{ grid-row:span 2; }
+.card.s2{ grid-row:span 2; }
+.card.s3{ grid-row:span 3; }
 
 /* card header: a heavy rule to write the client name on */
 .chead{
@@ -84,6 +86,7 @@ body{
 }
 .grid.r3 .chead{ height:7.2mm; }
 .grid.r4 .chead{ height:5.8mm; }
+.grid.r6 .chead{ height:7.2mm; }
 .cname{ flex:1; }
 .cdate{
   flex:0 0 var(--datew); align-self:stretch;
@@ -144,7 +147,11 @@ var PAGES = [
   { label:"12 &middot; 4&times;3", grid:"c4 r3",  runs:[ {n:12, lines:8} ] },
   { label:"12 &middot; 3&times;4", grid:"c3 r4",  runs:[ {n:12, lines:6} ] },
   { label:"14",             grid:"c4 r4 flowcol", runs:[ {n:12, lines:6},
-                                                         {n:2,  lines:14, tall:true} ] }
+                                                         {n:2,  lines:14, span:2} ] },
+  /* the 4x3 sheet with its last column merged into two larger cards: six
+     grid rows, normal cards spanning two of them and the merged pair three */
+  { label:"11",             grid:"c4 r6 flowcol", runs:[ {n:9,  lines:8,  span:2},
+                                                         {n:2,  lines:13, span:3} ] }
 ];
 
 function head(label){
@@ -160,7 +167,7 @@ function head(label){
   '</div>';
 }
 
-function card(lines, tall){
+function card(lines, span){
   var rows = "";
   for (var i = 0; i < lines; i++){
     rows += '<div class="line">' +
@@ -169,7 +176,7 @@ function card(lines, tall){
       '<span class="dcell"></span>' +
     '</div>';
   }
-  return '<div class="card' + (tall ? " tall" : "") + '">' +
+  return '<div class="card' + (span > 1 ? " s" + span : "") + '">' +
     '<div class="chead"><span class="cname"></span><span class="cdate">date</span></div>' +
     '<div class="lines">' + rows + '</div>' +
   '</div>';
@@ -178,7 +185,7 @@ function card(lines, tall){
 document.getElementById("out").innerHTML = PAGES.map(function(pg){
   var cards = pg.runs.map(function(run){
     var out = "";
-    for (var i = 0; i < run.n; i++) out += card(run.lines, run.tall);
+    for (var i = 0; i < run.n; i++) out += card(run.lines, run.span || 1);
     return out;
   }).join("");
   return '<div class="sheet">' + head(pg.label) +
