@@ -27,7 +27,7 @@ body{
   width:10.32in; height:7.82in;      /* letter landscape less 0.34in margins */
   background:#fff;
   display:flex; flex-direction:column;
-  margin:0 auto 24px; padding:0;
+  margin:0 auto 26px; padding:0;
   box-shadow:0 6px 24px rgba(0,0,0,.45);
 }
 
@@ -39,6 +39,7 @@ body{
   flex:0 0 auto;
 }
 .title{ font-size:11.5pt; font-weight:700; letter-spacing:-.01em; white-space:nowrap; }
+.title .count{ font-weight:400; color:var(--faint); }
 .title small{
   display:block; font-size:5.2pt; font-weight:400; letter-spacing:.16em;
   text-transform:uppercase; color:var(--faint); margin-top:.4mm;
@@ -116,26 +117,19 @@ body{
 .legend .star{ width:3.1mm; height:3.1mm; }
 
 /* ---------- screen only ---------- */
-.caption{
-  max-width:10.32in; margin:0 auto 6px; color:#f2f2f2;
-  font-size:12px; letter-spacing:.14em; text-transform:uppercase;
-}
 .pad{ height:22px; }
 
 @media print{
   html,body{ background:#fff; }
   .sheet{ margin:0; box-shadow:none; break-after:page; page-break-after:always; }
   .sheet:last-of-type{ break-after:auto; page-break-after:auto; }
-  .caption,.pad{ display:none; }
+  .pad{ display:none; }
 }
 </style>
 </head>
 <body>
 <div class="pad"></div>
-<div class="caption">Page 1 — nine cards</div>
 <div class="sheet" id="p3"></div>
-
-<div class="caption">Page 2 — sixteen cards</div>
 <div class="sheet" id="p4"></div>
 <div class="pad"></div>
 
@@ -143,9 +137,10 @@ body{
 var STAR = '<svg class="star" viewBox="0 0 24 24" aria-hidden="true">' +
   '<path d="M12 2.7 14.85 8.9 21.5 9.7 16.6 14.35 17.9 21 12 17.7 6.1 21 7.4 14.35 2.5 9.7 9.15 8.9z"/></svg>';
 
-function head(){
+function head(count){
   return '<div class="top">' +
-    '<div class="title">Daily Sheet<small>Bare Consulting</small></div>' +
+    '<div class="title">Daily Sheet <span class="count">(' + count + ')</span>' +
+      '<small>Bare Consulting</small></div>' +
     '<div class="dated"><span class="lbl">Dates</span><span class="blank"></span></div>' +
     '<div class="legend">' +
       '<span class="item"><span class="box"></span>done</span>' +
@@ -173,7 +168,7 @@ function card(lines){
 function page(el, cols, cards, lines){
   var grid = "";
   for (var i = 0; i < cards; i++) grid += card(lines);
-  el.innerHTML = head() + '<div class="grid g' + cols + '">' + grid + '</div>';
+  el.innerHTML = head(cards) + '<div class="grid g' + cols + '">' + grid + '</div>';
 }
 
 page(document.getElementById("p3"), 3, 9, 7);
